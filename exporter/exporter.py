@@ -20,22 +20,23 @@ class SecurityGroup:
 
     properties = ["name", "context", "rules"]
 
-    def __init__(self, group):
+    def __init__(self, config):
         self._prop_dict = LastUpdatedOrderedDict()
-        self._group = group
+        self._config = config
         self._rules = []
 
     def load(self):
-        rules = self._group['rules']
+        rules = self._config['rules']
         for rule in rules:
             self.add_rule(rule)
         for prop in self.properties:
-            value = getattr(self, prop)
-            if value:
+            try:
+                value = getattr(self, prop)
                 self._prop_dict[str(prop)] = value
+            except AttributeError:
+                pass
 
-    @property
-    def sec_group(self):
+    def asdict(self):
         return self._prop_dict
 
     @property
@@ -48,34 +49,34 @@ class SecurityGroup:
         self._rules.append(new_rule.sec_rule)
 
     def __getattr__(self, name):
-        response = None
-        if name in self._group:
-            response = self._group[name]
-        return response
+        if name in self._config:
+            return self._config[name]
+        raise AttributeError("%s not found" % name)
 
 class SecurityRule:
 
     properties = ["name", "protocol", "destination", "ports", "logs", "code", "type"]
 
-    def __init__(self, rule):
-        self._rule = rule
+    def __init__(self, config):
+        self._config = config
         self._prop_dict = LastUpdatedOrderedDict()
 
-    @property
-    def sec_rule(self):
+    def asdict(self):
         return self._prop_dict
 
     def load(self):
         for prop in self.properties:
-            value = getattr(self, prop)
-            if value:
+            try:
+                value = getattr(self, prop)
                 self._prop_dict[prop] = value
+            except AttributeError:
+                pass
 
     def __getattr__(self, name):
-        response = None
-        if name in self._rule:
-            response = self._rule[name]
-        return response
+        if name in self._config:
+            return self._config[name]
+        raise AttributeError("%s not found" % name)
+
 
 class User:
 
@@ -87,8 +88,7 @@ class User:
         self._user_uaa = user_uaa
         self._prop_dict = LastUpdatedOrderedDict()
 
-    @property
-    def user(self):
+    def asdict(self):
         return self._prop_dict
 
     @property
@@ -110,7 +110,6 @@ class User:
     @property
     def name(self):
         return getattr(self, 'userName')
-
 
     def load(self):
         for prop in self.properties:
