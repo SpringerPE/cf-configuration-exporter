@@ -63,6 +63,12 @@ class Quota(BaseEntity):
 
 class Space(BaseEntity):
 
+    user_types = [
+                            "developers", 
+                            "managers", 
+                            "auditors"
+                        ]
+
     properties = [
                             "name", 
                             "allow_ssh", 
@@ -85,20 +91,20 @@ class Space(BaseEntity):
         url = self._config["security_groups_url"]
         groups = self._fetcher.get_entities(url)
         for group in groups:
-            self._security_groups.append(group['name'])
+            if 'name' in group:
+                self._security_groups.append(group['name'])
 
     def load_users(self):
-        user_types = ["developers", "managers", "auditors"]
-        for user_type in user_types:
+        for user_type in self.user_types:
             url = "%s_url" % user_type
             if not url in self._config:
                 continue 
-            setattr(self, user_type, [])
             users = self._fetcher.get_entities(self._config[url])
+            user_list = []
             for user in users:
-                user_list =  getattr(self, user_type)
                 if 'username' in user:
                     user_list.append(user['username'])
+            setattr(self, user_type, user_list)
 
     def load(self):
         self.load_users()
@@ -107,6 +113,13 @@ class Space(BaseEntity):
 
 
 class Organization(BaseEntity):
+
+    user_types = [
+                            "users", 
+                            "managers", 
+                            "billing_managers", 
+                            "auditors"
+                        ]
 
     properties = [
                             "name", 
@@ -135,17 +148,18 @@ class Organization(BaseEntity):
             self._spaces.append(new_space.asdict())
     
     def load_users(self):
-        user_types = ["users", "managers", "billing_managers", "auditors"]
-        for user_type in user_types:
+        for user_type in self.user_types:
             url = "%s_url" % user_type
             if not url in self._config:
                 continue 
-            setattr(self, user_type, [])
             users = self._fetcher.get_entities(self._config[url])
+            user_list = []
             for user in users:
                 user_list =  getattr(self, user_type)
                 if 'username' in user:
                     user_list.append(user['username'])
+            setattr(self, user_type, user_list)
+
 
     def load(self):
         self.load_spaces()
