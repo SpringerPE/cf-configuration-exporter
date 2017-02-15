@@ -3,6 +3,7 @@ from cfconfigurator.uaa import UAA, UAAException
 import collections
 import yaml
 import pyaml
+import os
 
 class LastUpdatedOrderedDict(collections.OrderedDict):
     'Store items in the order the keys were last added'
@@ -15,6 +16,41 @@ class Space:
 
     def __init__(self):
         pass
+
+
+class GUIDHelper:
+
+    def __init__(self, config):
+        self._config = config
+
+    def get_guids(self):
+        guids = [resource['metadata']['guid'] for resource in self._config[0]['resources']]
+        return guid
+
+class Organization:
+
+    properties = ["name"]
+
+    def __init__(self, config):
+        self._prop_dict = LastUpdatedOrderedDict()
+        self._config = config
+        self._rules = []
+
+    def load(self):
+        for prop in self.properties:
+            try:
+                value = getattr(self, prop)
+                self._prop_dict[prop] = value
+            except AttributeError:
+                pass
+
+    def asdict(self):
+        return self._prop_dict
+
+    def __getattr__(self, name):
+        if name in self._config:
+            return self._config[name]
+        raise AttributeError("%s not found" % name)
 
 class SecurityGroup:
 
@@ -130,9 +166,12 @@ class User:
 class Exporter:
 
     def __init__(self, api_url=""):
+        api_url = os.environ.get("EXPORTER_API_URL")
         self.client = CF(api_url)
 
     def login(self, admin_user='admin', admin_password=''):
+        admin_user = os.environ.get("EXPORTER_ADMIN_USER")
+        admin_password = os.environ.get("EXPORTER_ADMIN_PASSWORD")
         self.client.login(admin_user, admin_password)
 
     def get_variable_group(self):
