@@ -4,6 +4,9 @@ import collections
 import yaml
 import pyaml
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ResourceFetcher:
 
@@ -39,7 +42,6 @@ class BaseEntity:
 
     def lookup(self, name):
         for config in self._config:
-            print(config)
             if name in config:
                 return config[name] 
         raise AttributeError("%s not found" % name)
