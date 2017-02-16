@@ -10,13 +10,21 @@ class ResourceFetcher:
     def __init__(self, client):
         self._client = client
 
+    def get_raw(self, resource_url):
+        response = self._client.request("GET", resource_url)
+        return response[0]
+
     def get_resources(self, resource_url):
         response = self._client.request("GET", resource_url)
-        return [obj for obj in response[0]['resources']]
+        if 'resources' in response[0]:
+            return [obj for obj in response[0]['resources']]
 
     def get_entities(self, resource_url):
         response = self._client.request("GET", resource_url)
-        return [obj['entity'] for obj in response[0]['resources']]
+        if 'resources' in response[0]:
+            return [obj['entity'] for obj in response[0]['resources']]
+        else:
+            return response[0]['entity']
 
     def get_metadata(self, resource_url):
         response = self._client.request("GET", resource_url)
@@ -43,6 +51,19 @@ class BaseEntity:
 
     def asdict(self):
         return self._prop_dict
+
+class FeatureFlag(BaseEntity):
+
+    properties = [  "name", 
+                            "value"
+                        ]
+
+    @property
+    def value(self):
+        return self.__getattr__("enabled")
+
+    def __init__(self, config):
+        super(FeatureFlag, self).__init__(config)
 
 class Quota(BaseEntity):
 
@@ -104,7 +125,8 @@ class Space(BaseEntity):
             for user in users:
                 if 'username' in user:
                     user_list.append(user['username'])
-            setattr(self, user_type, user_list)
+            if len(user_list) > 0:
+                setattr(self, user_type, user_list)
 
     def load(self):
         self.load_users()
@@ -123,6 +145,7 @@ class Organization(BaseEntity):
 
     properties = [
                             "name", 
+                            "quota",
                             "spaces", 
                             "users", 
                             "managers", 
@@ -138,7 +161,17 @@ class Organization(BaseEntity):
     @property
     def spaces(self):
         return self._spaces
-    
+
+    @property
+    def quota(self):
+        return self._quota
+
+    def load_quota_definitions(self):
+        url = self._config["quota_definition_url"]
+        quota = self._fetcher.get_entities(url)
+        if 'name' in quota:
+            self._quota = quota['name']
+
     def load_spaces(self):
         url = self._config["spaces_url"]
         spaces = self._fetcher.get_entities(url)
@@ -155,13 +188,14 @@ class Organization(BaseEntity):
             users = self._fetcher.get_entities(self._config[url])
             user_list = []
             for user in users:
-                user_list =  getattr(self, user_type)
                 if 'username' in user:
                     user_list.append(user['username'])
-            setattr(self, user_type, user_list)
+            if len(user_list) > 0:
+                setattr(self, user_type, user_list)
 
 
     def load(self):
+        self.load_quota_definitions()
         self.load_spaces()
         self.load_users()
         BaseEntity.load(self)
@@ -193,6 +227,7 @@ class SecurityGroup(BaseEntity):
             new_rule.load()
             self._rules.append(new_rule.asdict())
 
+#TODO add name to security rules
 class SecurityRule(BaseEntity):
 
     properties = [
@@ -223,9 +258,10 @@ class User(BaseEntity):
                             "external_id"
                         ]
 
-    def __init__(self, config, user_uaa):
+    def __init__(self, config, user_uaa, fetcher):
         super(User, self).__init__(config)
         self._user_uaa = user_uaa
+        self._fetcher = fetcher
 
     @property
     def given_name(self):
@@ -245,6 +281,19 @@ class User(BaseEntity):
     def name(self):
         return getattr(self, 'userName')
 
+    def load(self):
+        self.load_default_space_and_org()
+        BaseEntity.load(self)
+
+    #TODO add also default organization
+    def load_default_space_and_org(self):
+        if "default_space_url" in self._config:
+            print(self._config)
+            url = self._config["default_space_url"]
+            space = self._fetcher.get_entities(url)
+            if 'name' in space:
+                self._default_space = space['name']
+
     def __getattr__(self, name):
         if name in self._config:
             return self._config[name]
@@ -255,16 +304,11 @@ class User(BaseEntity):
 
 class Exporter:
 
-    def __init__(self, api_url=""):
-        api_url = os.environ.get("EXPORTER_API_URL")
-        self.client = CF(api_url)
-        self.fetcher = ResourceFetcher(self.client)
+    def __init__(self, client):
+        self._client = client
+        self._uaa_client = client.uaa
+        self.fetcher = ResourceFetcher(client)
         self.manifest = collections.OrderedDict()
-
-    def login(self, admin_user='admin', admin_password=''):
-        admin_user = os.environ.get("EXPORTER_ADMIN_USER")
-        admin_password = os.environ.get("EXPORTER_ADMIN_PASSWORD")
-        self.client.login(admin_user, admin_password)
 
     def generate_manifest(self):
         self.manifest["cf_feature_flags"] = self.add_feature_flags()
@@ -277,13 +321,27 @@ class Exporter:
         self.manifest["cf_orgs"] = self.add_orgs()
 
     def add_feature_flags(self):
-        return []
+        response = self.fetcher.get_raw("/v2/config/feature_flags")
+        flag_list = []
+        for flag in response:
+            f = FeatureFlag(flag)
+            f.load()
+            flag_list.append(f.asdict())
+        return flag_list
 
     def add_staging_environment_variables(self):
-        return []
+        var_list = []
+        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
+        for elem in response:
+            var_list.append(elem)
+        return var_list
 
     def add_running_environment_variables(self):
-        return []
+        var_list = []
+        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
+        for elem in response:
+            var_list.append(elem)
+        return var_list
 
     def add_shared_domains(self):
         response = self.fetcher.get_entities("/v2/shared_domains")
@@ -315,11 +373,11 @@ class Exporter:
         user_list = []
         for user in response:
             try:
-                user_uaa = self.client.uaa.user_get(user['metadata']['guid'])
+                user_uaa = self._uaa_client.user_get(user['metadata']['guid'])
             except UAAException as uaaexp:
                 continue
             user_cf = user['entity']
-            u = User(user_cf, user_uaa)
+            u = User(user_cf, user_uaa, self.fetcher)
             u.load()
             user_list.append(u.asdict())
         return user_list
