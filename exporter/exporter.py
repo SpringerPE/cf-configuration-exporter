@@ -8,30 +8,51 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class ResourceParser:
+
+    @classmethod
+    def extract_entities(cls, body):
+        if 'resources' in body:
+            return [obj['entity'] for obj in body['resources']]
+        else:
+            return body['entity']
+
+    @classmethod
+    def extract_resources(cls, body):
+        if 'resources' in body:
+            return [obj for obj in body['resources']]
+
+    @classmethod
+    def extract_metadata(cls, body):
+        return [obj['metadata'] for obj in body['resources']]
+
+
 class ResourceFetcher:
 
     def __init__(self, client):
         self._client = client
 
     def get_raw(self, resource_url):
-        response = self._client.request("GET", resource_url)
+        response = self.response(resource_url)
         return response[0]
 
     def get_resources(self, resource_url):
-        response = self._client.request("GET", resource_url)
-        if 'resources' in response[0]:
-            return [obj for obj in response[0]['resources']]
+        response = self.response(resource_url)
+        body = response[0]
+        return ResourceParser.extract_resources(body)
 
     def get_entities(self, resource_url):
-        response = self._client.request("GET", resource_url)
-        if 'resources' in response[0]:
-            return [obj['entity'] for obj in response[0]['resources']]
-        else:
-            return response[0]['entity']
+        response = self.response(resource_url)
+        body = response[0]
+        return ResourceParser.extract_entities(body)
 
     def get_metadata(self, resource_url):
-        response = self._client.request("GET", resource_url)
-        return [obj['metadata'] for obj in response[0]['resources']]
+        response = self.response(resource_url)
+        body = response[0]
+        return ResourceParser.extract_metadata(body)
+
+    def response(self, resource_url):
+        return self._client.request("GET", resource_url)
 
 class BaseEntity:
 
