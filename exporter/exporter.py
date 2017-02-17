@@ -118,6 +118,8 @@ class Space(BaseEntity):
     def load_security_groups(self):
         url = self.lookup("security_groups_url")
         groups = self._fetcher.get_entities(url)
+        if groups is None:
+            return
         for group in groups:
             if 'name' in group:
                 self._security_groups.append(group['name'])
@@ -286,22 +288,44 @@ class User(BaseEntity):
         raise AttributeError("family_name not found")
 
     @property
+    def email(self):
+        emails = self.lookup('emails')
+        if len(emails) > 0:
+            if 'value' in emails[0]:
+                return emails[0]['value']
+        raise AttributeError("email not found")
+    
+    @property
     def name(self):
-        return getattr(self, 'userName')
+        return self.lookup('userName')
+
+    @property
+    def default_space(self):
+        return self._default_space
+
+    @property
+    def default_organization(self):
+        return self._default_organization
 
     def load(self):
         self.load_default_space_and_org()
         BaseEntity.load(self)
 
-    #TODO add also default organization
     def load_default_space_and_org(self):
         try:
-            url = self.lookup("default_space_url")
+            space_url = self.lookup("default_space_url")
         except AttributeError:
             return
-        space = self._fetcher.get_entities(url)
-        if 'name' in space:
-            self._default_space = space['name']
+        space = self._fetcher.get_entities(space_url)
+        if 'organization_url' in space:
+            org_url = space['organization_url']
+            org = self._fetcher.get_entities(org_url)
+
+            if ('name' in space) and ('name' in org):
+                self._default_organization = org['name']
+                self._default_space = space['name']
+
+
 
 
 class Exporter:
