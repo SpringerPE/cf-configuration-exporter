@@ -35,10 +35,10 @@ class ResourceFetcher:
 
 class BaseEntity:
 
-    def __init__(self, config_dicts, fetcher=None):
+    def __init__(self, *config_dicts, fetcher=None):
         self._prop_dict = collections.OrderedDict()
+        self._fetcher  = fetcher
         self._config = config_dicts
-        self._fetcher = fetcher
 
     def lookup(self, name):
         for config in self._config:
@@ -70,8 +70,8 @@ class FeatureFlag(BaseEntity):
     def value(self):
         return self.__getattr__("enabled")
 
-    def __init__(self, config_dicts):
-        super(FeatureFlag, self).__init__(config_dicts)
+    def __init__(self, *config_dicts):
+        super(FeatureFlag, self).__init__(*config_dicts)
 
 class Quota(BaseEntity):
 
@@ -87,8 +87,8 @@ class Quota(BaseEntity):
                             "app_instance_limit"
                         ]
 
-    def __init__(self, config_dicts):
-        super(Quota, self).__init__(config_dicts)
+    def __init__(self, *config_dicts):
+        super(Quota, self).__init__(*config_dicts)
 
 class Space(BaseEntity):
 
@@ -107,8 +107,8 @@ class Space(BaseEntity):
                             "security_groups"
                         ]
     
-    def __init__(self, config_dicts, fetcher):
-        super(Space, self).__init__(config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts, fetcher=None):
+        super(Space, self).__init__(*config_dicts, fetcher=fetcher)
         self._security_groups = []
 
     @property
@@ -126,10 +126,10 @@ class Space(BaseEntity):
         for user_type in self.user_types:
             url = "%s_url" % user_type
             try:
-                self.lookup(url)
-            except AttributeError:
+                users = self.lookup(url)
+            except AttributeError as ate:
+                print(str(ate))
                 continue
-            users = self.lookup(url)
             user_list = []
             for user in users:
                 if 'username' in user:
@@ -162,8 +162,8 @@ class Organization(BaseEntity):
                             "auditors"
                         ]
 
-    def __init__(self, config_dicts, fetcher=None):
-        super(Organization, self).__init__(config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts, fetcher=None):
+        super(Organization, self).__init__(*config_dicts, fetcher=fetcher)
         self._spaces = []
 
     @property
@@ -184,7 +184,7 @@ class Organization(BaseEntity):
         url = self.lookup("spaces_url")
         spaces = self._fetcher.get_entities(url)
         for space in spaces:
-            new_space = Space([space], self._fetcher)
+            new_space = Space(space, fetcher=self._fetcher)
             new_space.load()
             self._spaces.append(new_space.asdict())
     
@@ -218,8 +218,8 @@ class SecurityGroup(BaseEntity):
                             "rules"
                         ]
 
-    def __init__(self, config_dicts):
-        super(SecurityGroup, self).__init__(config_dicts)
+    def __init__(self, *config_dicts, fetcher=None):
+        super(SecurityGroup, self).__init__(*config_dicts, fetcher=fetcher)
         self._rules = []
 
     @property
@@ -233,7 +233,7 @@ class SecurityGroup(BaseEntity):
     def load_rules(self):
         rules = self.lookup('rules')
         for rule in rules:
-            new_rule = SecurityRule([rule])
+            new_rule = SecurityRule(rule)
             new_rule.load()
             self._rules.append(new_rule.asdict())
 
@@ -250,8 +250,8 @@ class SecurityRule(BaseEntity):
                             "type"
                         ]
 
-    def __init__(self, config_dicts):
-        super(SecurityRule, self).__init__(config_dicts)
+    def __init__(self, *config_dicts, fetcher=None):
+        super(SecurityRule, self).__init__(*config_dicts, fetcher=fetcher)
 
 
 class User(BaseEntity):
@@ -268,8 +268,8 @@ class User(BaseEntity):
                             "external_id"
                         ]
 
-    def __init__(self, config_dicts, fetcher=None):
-        super(User, self).__init__(config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts, fetcher=None):
+        super(User, self).__init__(*config_dicts, fetcher=fetcher)
 
     @property
     def given_name(self):
@@ -326,7 +326,7 @@ class Exporter:
         response = self.fetcher.get_raw("/v2/config/feature_flags")
         flag_list = []
         for flag in response:
-            f = FeatureFlag([flag])
+            f = FeatureFlag(flag)
             f.load()
             flag_list.append(f.asdict())
         return flag_list
@@ -356,7 +356,7 @@ class Exporter:
             response = self.fetcher.get_entities("/v2/security_groups")
             group_list = []
             for group in response:
-                g = SecurityGroup([group])
+                g = SecurityGroup(group)
                 g.load()
                 group_list.append(g.asdict())
             return group_list
@@ -365,7 +365,7 @@ class Exporter:
         response = self.fetcher.get_entities("/v2/quota_definitions")
         quota_list = []
         for quota in response:
-            q = Quota([quota])
+            q = Quota(quota)
             q.load()
             quota_list.append(q.asdict())
         return quota_list
@@ -379,7 +379,7 @@ class Exporter:
             except UAAException as uaaexp:
                 continue
             user_cf = user['entity']
-            u = User([user_cf, user_uaa], fetcher=self.fetcher)
+            u = User(user_cf, user_uaa, fetcher=self.fetcher)
             u.load()
             user_list.append(u.asdict())
         return user_list
@@ -388,7 +388,7 @@ class Exporter:
         response = self.fetcher.get_entities("/v2/organizations")
         org_list = []
         for org in response:
-            o = Organization([org], fetcher=self.fetcher)
+            o = Organization(org, fetcher=self.fetcher)
             o.load()
             org_list.append(o.asdict())
         return org_list
