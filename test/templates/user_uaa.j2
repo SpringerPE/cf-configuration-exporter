@@ -1,0 +1,34 @@
+{
+  "id" : "{{ user.guid }}",
+  "externalId" : "{{ user.externalId}}",
+  "meta" : {
+    "version" : 0,
+    "created" : "2017-02-02T19:05:45.685Z",
+    "lastModified" : "2017-02-02T19:05:45.685Z"
+  },
+  "userName" : "{{ user.userName }}",
+  "name" : {
+    "familyName" : "family name",
+    "givenName" : "given name"
+  },
+  "emails" : [ {
+    "value" : "{{ user.email }}",
+    "primary" : false
+  } ],
+  "groups" : [ {
+    "value" : "73339582-437f-4e46-86d4-977c31617c44",
+    "display" : "cloud_controller.read",
+    "type" : "DIRECT"
+  }],
+  "phoneNumbers" : [ {
+    "value" : "5555555555"
+  } ],
+  "active" : true,
+  "verified" : true,
+  "origin" : "uaa",
+  "zoneId" : "uaa",
+  "passwordLastModified" : "2017-02-02T19:05:45.000Z",
+  "previousLogonTime" : 1486062345696,
+  "lastLogonTime" : 1486062345697,
+  "schemas" : [ "urn:scim:schemas:core:1.0" ]
+}
