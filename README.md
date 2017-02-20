@@ -18,10 +18,11 @@ Documentation of the APIs used:
 * https://apidocs.cloudfoundry.org
 * https://docs.cloudfoundry.org/api/uaa
 
+#INSTALLATION
 
 ## Example
 
-Install via pip: `pip install cfconfigurator`
+Install via pip: `pip install cf-configuration-exporter`
 
 ## Upload to PyPI
 
@@ -42,6 +43,34 @@ Install via pip: `pip install cfconfigurator`
    python setup.py register -r pypi
    python setup.py sdist upload -r pypi
    ```
+
+#USAGE
+
+```
+Define the following env variables:
+
+`EXPORTER_API_URL` = the endpoint of the Cloudfoundry API
+`EXPORTER_ADMIN_USER` = username used for logging in to CloudFoundry
+`EXPORTER_ADMIN_PASSWORD` = password used for logging in to Cloudfoundry
+```
+
+You can run the utility by executing the run script:
+
+```
+./run
+```
+
+or after installing the pip package
+
+```
+python setup.py install
+```
+
+by running
+
+```
+cf_export_configuration
+```
 
 ## Author
 
