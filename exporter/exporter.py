@@ -28,6 +28,9 @@ class ResourceParser:
 
 
 class ResourceFetcher:
+    """
+    @brief      Help fetching resources from Cloudfoundry
+    """
 
     def __init__(self, client):
         self._client = client
@@ -37,16 +40,25 @@ class ResourceFetcher:
         return response[0]
 
     def get_resources(self, resource_url):
+        """
+        @brief      Get the `resources` configuration from the response body
+        """
         response = self.response(resource_url)
         body = response[0]
         return ResourceParser.extract_resources(body)
 
     def get_entities(self, resource_url):
+        """
+        @brief      Get the `entities` configuration from the response body
+        """
         response = self.response(resource_url)
         body = response[0]
         return ResourceParser.extract_entities(body)
 
     def get_metadata(self, resource_url):
+        """
+        @brief      Get the `metadata` configuration from the response body
+        """
         response = self.response(resource_url)
         body = response[0]
         return ResourceParser.extract_metadata(body)
@@ -58,23 +70,51 @@ class ResourceFetcher:
             logger.err(str(cfe))
             raise
 
-class BaseEntity:
+class BaseResource:
+    """
+    @brief      Base Class for a generic CF Resource
+    """
 
     def __init__(self, *config_dicts, fetcher=None):
+        """
+        @brief      Constructs the Resource object.
+        
+        @param      self          The object
+        @param      config_dicts  The configuration dicts
+        @param      fetcher       The fetcher
+        """
         self._prop_dict = collections.OrderedDict()
         self._fetcher  = fetcher
         self._config = config_dicts
 
     def lookup(self, name):
+        """
+        @brief         looks up the name variable
+
+        Performs a look up for a variable named `name` against
+        the list of dictionaries passed as argument to the constructor
+        of this class
+        
+        @param      self  The object
+        @param      name  The name of the variable to look-up
+        """
         for config in self._config:
             if name in config:
                 return config[name] 
         raise AttributeError("%s not found" % name)
 
     def __getattr__(self, name):
+        """
+        Try to find the variable in the list of dictionaries passed to this
+        instance contructor begore raising a AttributeError
+        """
         return self.lookup(name)
 
     def load(self):
+        """
+        Parse the configuration and load the variables into the
+        self._prop_dict instance dictionary
+        """
         for prop in self.properties:
             try:
                 value = getattr(self, prop)
@@ -83,10 +123,18 @@ class BaseEntity:
                 pass
 
     def asdict(self):
+        """
+        @return     self._prop_dict instance dictionary containing a map representing
+        the configuration parameters for this resource
+        """
         return self._prop_dict
 
-class FeatureFlag(BaseEntity):
+class FeatureFlag(BaseResource):
+    """
+    @brief:     Describe a feature flag.
 
+    https://docs.cloudfoundry.org/adminguide/listing-feature-flags.html
+    """
     properties = [  "name", 
                             "value"
                         ]
@@ -98,19 +146,35 @@ class FeatureFlag(BaseEntity):
     def __init__(self, *config_dicts):
         super(FeatureFlag, self).__init__(*config_dicts)
 
-class Vars(BaseEntity):
+class Vars(BaseResource):
+    """
+    @brief:     Describe environment variables groups.
 
+    This resource in represented as a dictionary of
+    `name`: `value` pairs where name is the name of the variable
+    and value its value
+    """
     properties = []
 
     def __init__(self, *config_dicts):
         super(Vars, self).__init__(*config_dicts)
 
-    def load(self):
-        for config in self._config:
-            for key, value in config.items():
-                self.properties[key] = value
+    def asdict(self):
+        #Differetly from other resources we do not need
+        #to extract the properties here. This resource consists
+        #on just a dictionary of key: value entries
+        return self._config[0]
 
-class Quota(BaseEntity):
+    def load(self):
+        #Nothing to load. The response body is already in the correct format
+        pass
+
+class Quota(BaseResource):
+    """
+    @brief:     Describe a quota configuration
+
+    Docs: https://docs.cloudfoundry.org/adminguide/quota-plans.html
+     """
 
     properties = [  "name", 
                             "total_services", 
@@ -127,8 +191,12 @@ class Quota(BaseEntity):
     def __init__(self, *config_dicts):
         super(Quota, self).__init__(*config_dicts)
 
-class Space(BaseEntity):
+class Space(BaseResource):
+    """
+    @brief:     Describe a space configuration
 
+    Docs: https://docs.cloudfoundry.org/concepts/roles.html#spaces
+    """
     user_types = [
                             "developers", 
                             "managers", 
@@ -153,6 +221,9 @@ class Space(BaseEntity):
         return self._security_groups
 
     def load_security_groups(self):
+        """
+        @brief      extract and parse the security groups
+        """
         url = self.lookup("security_groups_url")
         groups = self._fetcher.get_entities(url)
         if groups is None:
@@ -162,6 +233,9 @@ class Space(BaseEntity):
                 self._security_groups.append(group['name'])
 
     def load_users(self):
+        """
+        @brief      extract and parse the users for this space
+        """
         for user_type in self.user_types:
             url = "%s_url" % user_type
             try:
@@ -178,11 +252,13 @@ class Space(BaseEntity):
     def load(self):
         self.load_users()
         self.load_security_groups()
-        BaseEntity.load(self)
+        BaseResource.load(self)
 
 
-class Organization(BaseEntity):
-
+class Organization(BaseResource):
+    """
+    @brief      Describe a CF organization
+    """
     user_types = [
                             "users", 
                             "managers", 
@@ -213,12 +289,18 @@ class Organization(BaseEntity):
         return self._quota
 
     def load_quota_definitions(self):
+        """
+        @brief      Loads quota definitions for this org.
+        """
         url = self.lookup("quota_definition_url")
         quota = self._fetcher.get_entities(url)
         if 'name' in quota:
             self._quota = quota['name']
 
     def load_spaces(self):
+        """
+        @brief      Loads all the spaces for this org.
+        """
         url = self.lookup("spaces_url")
         spaces = self._fetcher.get_entities(url)
         for space in spaces:
@@ -227,6 +309,9 @@ class Organization(BaseEntity):
             self._spaces.append(new_space.asdict())
     
     def load_users(self):
+        """
+        @brief      Loads all the users for this org.
+        """
         for user_type in self.user_types:
             url = "%s_url" % user_type
             try:
@@ -246,9 +331,12 @@ class Organization(BaseEntity):
         self.load_quota_definitions()
         self.load_spaces()
         self.load_users()
-        BaseEntity.load(self)
+        BaseResource.load(self)
 
-class SecurityGroup(BaseEntity):
+class SecurityGroup(BaseResource):
+    """
+    @brief      Describe a global security group
+    """
 
     properties = [
                             "name", 
@@ -266,7 +354,7 @@ class SecurityGroup(BaseEntity):
 
     def load(self):
         self.load_rules()
-        BaseEntity.load(self)
+        BaseResource.load(self)
 
     def load_rules(self):
         rules = self.lookup('rules')
@@ -276,7 +364,10 @@ class SecurityGroup(BaseEntity):
             self._rules.append(new_rule.asdict())
 
 #TODO add name to security rules
-class SecurityRule(BaseEntity):
+class SecurityRule(BaseResource):
+    """
+    @brief:     Describe a security rule.
+    """
 
     properties = [
                             "name", 
@@ -292,7 +383,10 @@ class SecurityRule(BaseEntity):
         super(SecurityRule, self).__init__(*config_dicts, fetcher=fetcher)
 
 
-class User(BaseEntity):
+class User(BaseResource):
+    """
+    @brief      Describe a CF user.
+    """
 
     properties = [
                             "name", 
@@ -345,9 +439,12 @@ class User(BaseEntity):
 
     def load(self):
         self.load_default_space_and_org()
-        BaseEntity.load(self)
+        BaseResource.load(self)
 
     def load_default_space_and_org(self):
+        """
+        @brief      Loads a default space and organization.
+        """
         try:
             space_url = self.lookup("default_space_url")
         except AttributeError:
@@ -396,6 +493,7 @@ class Exporter:
         response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
         
         v = Vars(response)
+        my_dict = v.asdict()
         return v.asdict()
 
     def add_running_environment_variables(self):
