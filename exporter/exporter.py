@@ -383,12 +383,12 @@ class SecurityGroup(BaseResource):
 
     def load_rules(self):
         rules = self.lookup('rules')
-        for rule in rules:
+        for index, rule in enumerate(rules):
             new_rule = SecurityRule(rule)
+            new_rule.name = "security rule %i" % index 
             new_rule.load()
             self._rules.append(new_rule.asdict())
 
-#TODO add name to security rules
 class SecurityRule(BaseResource):
     """
     @brief:     Describe a security rule.
@@ -404,8 +404,18 @@ class SecurityRule(BaseResource):
                             "type"
                         ]
 
+
     def __init__(self, *config_dicts, fetcher=None):
         super(SecurityRule, self).__init__(*config_dicts, fetcher=fetcher)
+        self._name = None
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
 
 class User(BaseResource):
