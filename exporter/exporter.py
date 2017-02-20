@@ -1,4 +1,4 @@
-from cfconfigurator.cf import CF
+from cfconfigurator.cf import CF, CFException
 from cfconfigurator.uaa import UAA, UAAException
 import collections
 import yaml
@@ -52,7 +52,11 @@ class ResourceFetcher:
         return ResourceParser.extract_metadata(body)
 
     def response(self, resource_url):
-        return self._client.request("GET", resource_url)
+        try:
+            return self._client.request("GET", resource_url)
+        except CFException as cfe:
+            logger.err(str(cfe))
+            raise
 
 class BaseEntity:
 
@@ -93,6 +97,18 @@ class FeatureFlag(BaseEntity):
 
     def __init__(self, *config_dicts):
         super(FeatureFlag, self).__init__(*config_dicts)
+
+class Vars(BaseEntity):
+
+    properties = []
+
+    def __init__(self, *config_dicts):
+        super(Vars, self).__init__(*config_dicts)
+
+    def load(self):
+        for config in self._config:
+            for key, value in config.items():
+                self.properties[key] = value
 
 class Quota(BaseEntity):
 
@@ -151,7 +167,6 @@ class Space(BaseEntity):
             try:
                 users = self.lookup(url)
             except AttributeError as ate:
-                print(str(ate))
                 continue
             user_list = []
             for user in users:
@@ -379,16 +394,16 @@ class Exporter:
     def add_staging_environment_variables(self):
         var_list = []
         response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
-        for elem in response:
-            var_list.append(elem)
-        return var_list
+        
+        v = Vars(response)
+        return v.asdict()
 
     def add_running_environment_variables(self):
         var_list = []
         response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
-        for elem in response:
-            var_list.append(elem)
-        return var_list
+        
+        v = Vars(response)
+        return v.asdict()
 
     def add_shared_domains(self):
         response = self.fetcher.get_entities("/v2/shared_domains")
