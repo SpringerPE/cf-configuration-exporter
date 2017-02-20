@@ -294,6 +294,8 @@ class Organization(BaseResource):
     properties = [
                             "name", 
                             "quota",
+                            "domains_private",
+                            "domains_borrowed",
                             "spaces", 
                             "users", 
                             "managers", 
@@ -312,6 +314,40 @@ class Organization(BaseResource):
     @property
     def quota(self):
         return self._quota
+
+    @property
+    def domains_private(self):
+        return self._domains_private
+
+    @property
+    def domains_borrowed(self):
+        return self._domains_borrowed
+
+
+    def load_private_domains(self):
+        """
+        @brief  Loads private domains list for this org
+        """
+        url = self.lookup("private_domains_url")
+        p_domains = self._fetcher.get_entities(url)
+        domains = []
+        for domain in p_domains:
+            if 'name' in domain:
+                domains.append(domain['name'])
+        self._domains_private = domains
+
+
+    def load_borrowed_domains(self):
+        """
+        @brief  Loads borrowed domains list for this org
+        """
+        url = self.lookup("domains_url")
+        b_domains = self._fetcher.get_entities(url)
+        domains = []
+        for domain in b_domains:
+            if 'name' in domain:
+                domains.append(domain['name'])
+        self._domains_borrowed = domains
 
     def load_quota_definitions(self):
         """
@@ -353,6 +389,8 @@ class Organization(BaseResource):
 
 
     def load(self):
+        self.load_private_domains()
+        self.load_borrowed_domains()
         self.load_quota_definitions()
         self.load_spaces()
         self.load_users()
