@@ -4,11 +4,11 @@ import pyaml
 import logging
 import sys
 
-from exporter import Exporter
+from .exporter import Exporter
 from cfconfigurator.cf import CF
 from cfconfigurator.uaa import UAA, UAAException
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 api_url = os.environ.get("EXPORTER_API_URL", None)
@@ -31,7 +31,5 @@ def main():
 
 	exp = Exporter(cf_client)
 	exp.generate_manifest()
-	print(pyaml.dump(exp.manifest))	
+	print(pyaml.dump(exp.manifest))
 
-if __name__ == "__main__":
-	main()
