@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import exporter.run as exporter
+
+if __name__ == "__main__":
+	exporter.main()
