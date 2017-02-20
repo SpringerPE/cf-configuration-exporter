@@ -1,4 +1,2 @@
 cfconfigurator==0.2.2
-pyyaml
 pyaml
-nose
