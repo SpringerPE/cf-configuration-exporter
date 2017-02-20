@@ -25,6 +25,27 @@ class ResourceParser:
         return [obj['metadata'] for obj in body['resources']]
 
 
+class Memoize:
+
+    def __init__(self, make_request):
+        self.make_request = make_request
+        self.memo = {}
+
+    def __call__(self, o_self, resource_url):
+        if resource_url not in self.memo:
+            response = self.make_request(o_self, resource_url)
+
+            if response[1] == 200:
+                self.memo[resource_url] = response
+            else:
+                return response
+
+        return self.memo[resource_url]
+
+    def __get__(self, instance, owner):
+        from functools import partial
+        return partial(self.__call__, instance)
+
 class ResourceFetcher:
     """
     @brief      Help fetching resources from Cloudfoundry
@@ -32,6 +53,7 @@ class ResourceFetcher:
 
     def __init__(self, client):
         self._client = client
+
 
     def get_raw(self, resource_url):
         response = self.response(resource_url)
@@ -61,6 +83,7 @@ class ResourceFetcher:
         body = response[0]
         return ResourceParser.extract_metadata(body)
 
+    @Memoize
     def response(self, resource_url):
         try:
             return self._client.request("GET", resource_url)
