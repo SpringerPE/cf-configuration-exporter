@@ -19,10 +19,13 @@ def main():
 
 	if api_url is None:
 		logger.critical("Please set EXPORTER_API_URL env variable")
+		sys.exit(1)
 	if admin_user is None:
 		logger.critical("Please set EXPORTER_ADMIN_USER env variable")
+		sys.exit(1)
 	if admin_password is None:
 		logger.critical("Please set EXPORTER_ADMIN_PASSWORD env variable")
+		sys.exit(1)
 
 	logger.info("Start exporting configuration...")
 
