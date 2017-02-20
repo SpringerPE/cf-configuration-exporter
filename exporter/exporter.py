@@ -1,8 +1,6 @@
 from cfconfigurator.cf import CF, CFException
 from cfconfigurator.uaa import UAA, UAAException
 import collections
-import yaml
-import pyaml
 import os
 import logging
 
