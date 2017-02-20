@@ -190,6 +190,9 @@ class Vars(BaseResource):
         #on just a dictionary of key: value entries
         return self._config[0]
 
+    def aslist(self):
+        return [{'name': name, 'value': value} for name, value in self._config[0].items()]
+
     def load(self):
         #Nothing to load. The response body is already in the correct format
         pass
@@ -567,14 +570,14 @@ class Exporter:
         
         v = Vars(response)
         my_dict = v.asdict()
-        return v.asdict()
+        return v.aslist()
 
     def add_running_environment_variables(self):
         var_list = []
         response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
         
         v = Vars(response)
-        return v.asdict()
+        return v.aslist()
 
     def add_shared_domains(self):
         response = self.fetcher.get_entities("/v2/shared_domains")
