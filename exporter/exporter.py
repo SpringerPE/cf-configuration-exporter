@@ -416,7 +416,13 @@ class SecurityGroup(BaseResource):
 
     @property
     def rules(self):
-        return self._rules
+        return self._rules 
+
+    def generate_rule_name(self):
+        num = 0
+        while True:
+            yield "Unnamed rule %i" % num
+            num += 1
 
     def load(self):
         self.load_rules()
@@ -424,11 +430,13 @@ class SecurityGroup(BaseResource):
 
     def load_rules(self):
         rules = self.lookup('rules')
+        name_generator = self.generate_rule_name()
         for index, rule in enumerate(rules):
             new_rule = SecurityRule(rule)
-            new_rule.name = "security rule %i" % index 
-            new_rule.load()
-            self._rules.append(new_rule.asdict())
+            new_rule.name_generator = name_generator
+            if new_rule.has_name():
+                new_rule.load()
+                self._rules.append(new_rule.asdict())
 
 class SecurityRule(BaseResource):
     """
@@ -448,15 +456,26 @@ class SecurityRule(BaseResource):
 
     def __init__(self, *config_dicts, fetcher=None):
         super(SecurityRule, self).__init__(*config_dicts, fetcher=fetcher)
-        self._name = None
+        self._name_generator = None
 
+    def has_name(self):
+        try:
+            self.lookup("description")
+        except AttributeError:
+            return False
+        return True
+    
     @property
     def name(self):
-        return self._name
+        return self.lookup("description")
 
-    @name.setter
-    def name(self, value):
-        self._name = value
+    @property
+    def name_generator(self):
+        return self._name_generator
+
+    @name_generator.setter
+    def name_generator(self, value):
+        self._name_generator = value
 
 
 class User(BaseResource):
