@@ -258,7 +258,7 @@ class Space(BaseResource):
             return
         for group in groups:
             if 'name' in group:
-                self._security_groups.append(group['name'])
+                self._security_groups.append({'name': group['name']})
 
     def load_users(self):
         """
