@@ -484,7 +484,8 @@ class User(BaseResource):
     """
 
     properties = [
-                            "name", 
+                            "name",
+                            "password",
                             "active", 
                             "email", 
                             "given_name", 
@@ -503,15 +504,19 @@ class User(BaseResource):
         name = self.lookup('name')
         if 'givenName' in name:
             return name['givenName']
-        raise AttributeError("given_name not found")
+        return "not given"
 
     @property
     def family_name(self):
         name = self.lookup('name')
         if 'familyName' in name:
             return name['familyName']
-        raise AttributeError("family_name not found")
+        return "not given"
 
+    @property
+    def password(self):
+        return None
+    
     @property
     def email(self):
         emails = self.lookup('emails')
