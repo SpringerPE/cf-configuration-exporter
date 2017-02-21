@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 api_url = os.environ.get("EXPORTER_API_URL", None)
 admin_user = os.environ.get("EXPORTER_ADMIN_USER", None)
 admin_password = os.environ.get("EXPORTER_ADMIN_PASSWORD", None)
+output_file = os.environ.get("EXPORTER_OUTPUT_FILE", "output")
 
 def main():
 
@@ -34,5 +35,7 @@ def main():
 
 	exp = Exporter(cf_client)
 	exp.generate_manifest()
-	print(pyaml.dump(exp.manifest))
+
+	with open(output_file ,"w") as stream:
+		pyaml.dump(exp.manifest, stream, explicit_start=True)
 
