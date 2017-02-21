@@ -1,7 +1,7 @@
 import unittest
 import json
-from exporter.exporter import Organization, ResourceParser
-from test.test_helper import UserAPIMock, SpaceAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock
+from exporter.exporter import ResourceParser, Organization, ResourceParser
+from test.test_helper import UserAPIMock, SpaceAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock, PrivateDomainAPIMock
 
 organization = {
   'guid': '1c0e6074-777f-450e-9abc-c42f39d9b75b',
@@ -47,6 +47,13 @@ quota_definition = json.loads(mock_quota.get_cf_response(quota))
 mock_sec_groups = SecGroupAPIMock()
 space_sec_groups_response = json.loads(mock_sec_groups.get_cf_space_sg_response({}))
 
+domain = {
+    'guid': ""
+}
+
+mock_private_domains = PrivateDomainAPIMock()
+private_domains_definition = json.loads(mock_private_domains.get_cf_org_private_domains_response({}))
+
 class MockResourceFetcher:
 
     def __init__(self, client):
@@ -71,13 +78,13 @@ class TestOrgDefinition(unittest.TestCase):
     fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/billing_managers", billing_managers_definition)
     fetcher.register_entity("/v2/spaces/5489e195-c42b-4e61-bf30-323c331ecc01/security_groups", space_sec_groups_response)
     fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/auditors", users_definition)
-
+    fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/private_domains", private_domains_definition)
 
     org = Organization(organization_definition, fetcher=fetcher)
     org.load()
     o = org.asdict()
     self.assertEqual(o['spaces'][0]['name'], 'space-1')
-    self.assertEqual(o['users'][0], 'user@example.com')
-    self.assertEqual(o['managers'][0], 'user@example.com')
-    self.assertEqual(o['billing_managers'][0], 'user@example.com')
+    self.assertEqual(o['users'][0], {'name': 'user@example.com'})
+    self.assertEqual(o['managers'][0], {'name': 'user@example.com'})
+    self.assertEqual(o['billing_managers'][0], {'name': 'user@example.com'})
 

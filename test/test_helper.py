@@ -57,3 +57,11 @@ class SecGroupAPIMock:
 
   def get_cf_space_sg_response(self, sg):
     return self.cf_template.render(sg=sg)
+
+class PrivateDomainAPIMock:
+
+  def __init__(self):
+    self.cf_template = env.get_template('private_domains.j2')
+
+  def get_cf_org_private_domains_response(self, domain):
+    return self.cf_template.render(domain=domain)
