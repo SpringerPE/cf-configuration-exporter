@@ -298,7 +298,8 @@ class Organization(BaseResource):
                             "name", 
                             "quota",
                             "domains_private",
-                            "domains_borrowed",
+                            #TODO: how to populate these?
+                            #"domains_borrowed",
                             "spaces", 
                             "users", 
                             "managers", 
@@ -336,7 +337,7 @@ class Organization(BaseResource):
         domains = []
         for domain in p_domains:
             if 'name' in domain:
-                domains.append(domain['name'])
+                domains.append({'name': domain['name']})
         self._domains_private = domains
 
 
@@ -344,13 +345,7 @@ class Organization(BaseResource):
         """
         @brief  Loads borrowed domains list for this org
         """
-        url = self.lookup("domains_url")
-        b_domains = self._fetcher.get_entities(url)
-        domains = []
-        for domain in b_domains:
-            if 'name' in domain:
-                domains.append(domain['name'])
-        self._domains_borrowed = domains
+        pass
 
     def load_quota_definitions(self):
         """
@@ -386,7 +381,7 @@ class Organization(BaseResource):
             user_list = []
             for user in users:
                 if 'username' in user:
-                    user_list.append(user['username'])
+                    user_list.append({'name': user['username']})
             if len(user_list) > 0:
                 setattr(self, user_type, user_list)
 
