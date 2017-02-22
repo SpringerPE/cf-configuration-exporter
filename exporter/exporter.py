@@ -256,9 +256,15 @@ class Space(BaseResource):
         groups = self._fetcher.get_entities(url)
         if groups is None:
             return
-        for group in groups:
-            if 'name' in group:
-                self._security_groups.append({'name': group['name']})
+
+        group_names = [group['name'] for group in groups]
+        #at this point the group_names contain all the running groups in addition
+        #to the groups assigned to this space.
+        #That's why we need to remove the duplicates
+        group_names = list(set(group_names))
+
+        for name in group_names:
+            self._security_groups.append({'name': name})
 
     def load_users(self):
         """
