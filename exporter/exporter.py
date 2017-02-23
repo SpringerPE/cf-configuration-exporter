@@ -392,7 +392,8 @@ class SecurityGroup(BaseResource):
 
     properties = [
                             "name", 
-                            "context", 
+                            "running_default",
+                            "staging_default", 
                             "rules"
                         ]
 
