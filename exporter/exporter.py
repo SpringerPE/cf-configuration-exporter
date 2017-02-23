@@ -240,7 +240,7 @@ class Space(BaseResource):
                             "security_groups"
                         ]
     
-    def __init__(self, *config_dicts, fetcher=None):
+    def __init__(self, *config_dicts,  fetcher=None):
         super(Space, self).__init__(*config_dicts, fetcher=fetcher)
         self._security_groups = []
 
@@ -497,8 +497,19 @@ class User(BaseResource):
                             "external_id"
                         ]
 
-    def __init__(self, *config_dicts, fetcher=None):
+    def __init__(self, *config_dicts, cf_response=None, fetcher=None):
         super(User, self).__init__(*config_dicts, fetcher=fetcher)
+        self._cf_response = cf_response
+
+    def lookup_cf_response(self, name):
+        config = self._cf_response
+        if name in config:
+                return config[name] 
+        raise AttributeError("%s not found" % name)
+
+    @property
+    def external_id(self):
+        return self.lookup("externalId")
 
     @property
     def given_name(self):
@@ -547,7 +558,7 @@ class User(BaseResource):
         @brief      Loads a default space and organization.
         """
         try:
-            space_url = self.lookup("default_space_url")
+            space_url = self.lookup_cf_response("default_space_url")
         except AttributeError:
             return
         space = self._fetcher.get_entities(space_url)
@@ -638,7 +649,7 @@ class Exporter:
             except UAAException as uaaexp:
                 continue
             user_cf = user['entity']
-            u = User(user_cf, user_uaa, fetcher=self.fetcher)
+            u = User(user_uaa, cf_response=user_cf, fetcher=self.fetcher)
             u.load()
             user_list.append(u.asdict())
         return user_list
