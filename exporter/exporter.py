@@ -304,8 +304,6 @@ class Organization(BaseResource):
                             "name", 
                             "quota",
                             "domains_private",
-                            #TODO: how to populate these?
-                            #"domains_borrowed",
                             "spaces", 
                             "users", 
                             "managers", 
@@ -329,11 +327,6 @@ class Organization(BaseResource):
     def domains_private(self):
         return self._domains_private
 
-    @property
-    def domains_borrowed(self):
-        return self._domains_borrowed
-
-
     def load_private_domains(self):
         """
         @brief  Loads private domains list for this org
@@ -345,13 +338,6 @@ class Organization(BaseResource):
             if 'name' in domain:
                 domains.append({'name': domain['name']})
         self._domains_private = domains
-
-
-    def load_borrowed_domains(self):
-        """
-        @brief  Loads borrowed domains list for this org
-        """
-        pass
 
     def load_quota_definitions(self):
         """
@@ -394,7 +380,6 @@ class Organization(BaseResource):
 
     def load(self):
         self.load_private_domains()
-        self.load_borrowed_domains()
         self.load_quota_definitions()
         self.load_spaces()
         self.load_users()
