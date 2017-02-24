@@ -51,8 +51,8 @@ class TestUserDefinition(unittest.TestCase):
     fetcher.register_entity("/v2/organizations/%s" % organization['guid'], default_organization_response)
 
     user = User(
-        user_definition, 
         uaa_user_definition, 
+        cf_response=user_definition,
         fetcher=fetcher)
 
     user.load()
