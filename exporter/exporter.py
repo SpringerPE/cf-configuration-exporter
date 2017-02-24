@@ -1,5 +1,6 @@
 from cfconfigurator.cf import CF, CFException
 from cfconfigurator.uaa import UAA, UAAException
+from .exceptions import ExporterException 
 
 import sys
 import logging
@@ -8,7 +9,6 @@ import os
 import exporter
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
 
 class ResourceParser:
 
@@ -484,6 +484,11 @@ class User(BaseResource):
                         ]
 
     def __init__(self, *config_dicts, cf_response=None, fetcher=None):
+        if cf_response is None:
+            raise ExporterException("Please provide the CF configuration for this user resource")
+        if fetcher is None:
+            raise ExporterExcetpion("Please provide a valid resource fetcher")
+
         super(User, self).__init__(*config_dicts, fetcher=fetcher)
         self._cf_response = cf_response
 
