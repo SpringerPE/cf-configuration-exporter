@@ -4,6 +4,7 @@
   "prev_url": null,
   "next_url": null,
   "resources": [
+  {% for domain in domains %}
     {
       "metadata": {
         "guid": "{{domain.guid}}",
@@ -17,6 +18,7 @@
         "owning_organization_url": "/v2/organizations/{{domain.org_guid}}",
         "shared_organizations_url": "/v2/private_domains/{{domain.guid}}/shared_organizations"
       }
-    }
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
   ]
 }

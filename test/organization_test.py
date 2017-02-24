@@ -1,7 +1,11 @@
 import unittest
 import json
 from exporter.exporter import ResourceParser, Organization, ResourceParser
-from test.test_helper import OrgUsersAPIMock, OrgSpacesAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock, PrivateDomainAPIMock
+from test.test_helper import (
+                        OrgUsersAPIMock, OrgSpacesAPIMock, 
+                        OrganizationAPIMock, QuotaAPIMock, 
+                        SecGroupAPIMock, PrivateDomainsAPIMock
+            )
 
 organization = {
   'guid': '1c0e6074-777f-450e-9abc-c42f39d9b75b',
@@ -60,12 +64,12 @@ quota_definition = json.loads(mock_quota.get_cf_response(quota))
 mock_sec_groups = SecGroupAPIMock()
 space_sec_groups_response = json.loads(mock_sec_groups.get_cf_space_sg_response({}))
 
-domain = {
+domains = [{
     'guid': ""
-}
+}]
 
-mock_private_domains = PrivateDomainAPIMock()
-private_domains_definition = json.loads(mock_private_domains.get_cf_org_private_domains_response({}))
+mock_private_domains = PrivateDomainsAPIMock()
+private_domains_definition = json.loads(mock_private_domains.get_cf_response({}))
 
 class MockResourceFetcher:
 
