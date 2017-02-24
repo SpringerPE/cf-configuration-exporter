@@ -38,17 +38,11 @@ class TestUserDefinition(unittest.TestCase):
     cls.user_definition = ResourceParser.extract_entities(json.loads(mock_user.get_cf_response(user)))
     cls.uaa_user_definition = json.loads(mock_user.get_uaa_response(user))
 
-    mock_space = SpaceAPIMock()
-    default_space_response = json.loads(mock_space.get_cf_response(space))
+    mock_space = SpaceAPIMock(space, fetcher)
+    default_space_response = mock_space.dump()
 
-    fetcher.register_entity("/v2/spaces/%s" % space['guid'], default_space_response)
-
-    mock_organization = OrganizationAPIMock()
-    default_organization_response = json.loads(
-                                                    mock_organization.get_cf_response(organization)
-                                                )
-
-    fetcher.register_entity("/v2/organizations/%s" % organization['guid'], default_organization_response)
+    mock_organization = OrganizationAPIMock(organization, fetcher)
+    default_organization_response = mock_organization.dump()
 
 
   def test_user_can_load_its_config(self):
