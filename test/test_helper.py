@@ -10,7 +10,6 @@ class UserAPIMock:
   def __init__(self):
     self.cf_template = env.get_template('user_cf.j2')
     self.uaa_template = env.get_template('user_uaa.j2')
-    self.org_users_template = env.get_template('org_users.j2')
 
   def get_cf_response(self, user):
     return self.cf_template.render(user=user)
@@ -18,8 +17,14 @@ class UserAPIMock:
   def get_uaa_response(self, user):
     return self.uaa_template.render(user=user)
 
-  def get_org_users_response(self, user):
-    return self.org_users_template.render(user=user)
+class OrgUsersAPIMock:
+
+  def __init__(self):
+    self.org_users_template = env.get_template('org_users.j2')
+
+  def get_cf_response(self, users):
+    return self.org_users_template.render(users=users)
+
 
 class SpaceAPIMock:
 

@@ -1,7 +1,7 @@
 import unittest
 import json
 from exporter.exporter import ResourceParser, Organization, ResourceParser
-from test.test_helper import UserAPIMock, SpaceAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock, PrivateDomainAPIMock
+from test.test_helper import OrgUsersAPIMock, SpaceAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock, PrivateDomainAPIMock
 
 organization = {
   'guid': '1c0e6074-777f-450e-9abc-c42f39d9b75b',
@@ -12,20 +12,27 @@ organization_definition = ResourceParser.extract_entities(
                                             json.loads(mock_organization.get_cf_response(organization))
                                         )
 
-user = {
+users = [
+{
     'userName': "user@example.com",
     'email': 'user@example.com',
-    'guid': "uaa-id-231",
+    'guid': "uaa-id-1",
+    'space_guid': "fc898723-2192-42d9-9567-c0b2e03a3169"
+},
+{
+    'userName': "user2@example.com",
+    'email': 'user2@example.com',
+    'guid': "uaa-id-2",
     'space_guid': "fc898723-2192-42d9-9567-c0b2e03a3169"
 }
+]
 
-mock_user = UserAPIMock()
-users_definition = json.loads(mock_user.get_org_users_response(user))
-
-auditors_definition = json.loads(mock_user.get_org_users_response(user))
-managers_definition = json.loads(mock_user.get_org_users_response(user))
-billing_managers_definition = json.loads(mock_user.get_org_users_response(user))
-billing_managers_definition = json.loads(mock_user.get_org_users_response(user))
+mock_user = OrgUsersAPIMock()
+users_definition = json.loads(mock_user.get_cf_response(users))
+auditors_definition = json.loads(mock_user.get_cf_response(users))
+managers_definition = json.loads(mock_user.get_cf_response(users))
+billing_managers_definition = json.loads(mock_user.get_cf_response(users))
+billing_managers_definition = json.loads(mock_user.get_cf_response(users))
 
 
 space1 = {

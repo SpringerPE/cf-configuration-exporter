@@ -4,6 +4,7 @@
   "prev_url": null,
   "next_url": null,
   "resources": [
+  {% for user in users %}
     {
       "metadata": {
         "guid": "{{user.guid}}",
@@ -24,6 +25,7 @@
         "managed_spaces_url": "/v2/users/{{user.guid}}/managed_spaces",
         "audited_spaces_url": "/v2/users/{{user.guid}}/audited_spaces"
       }
-    }
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
   ]
 }
