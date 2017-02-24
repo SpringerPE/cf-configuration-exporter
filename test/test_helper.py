@@ -30,13 +30,17 @@ class SpaceAPIMock:
 
   def __init__(self):
     self.cf_template = env.get_template('space.j2')
-    self.cf_org_template = env.get_template('org_spaces.j2')
 
   def get_cf_response(self, space):
     return self.cf_template.render(space=space)
 
-  def get_cf_org_spaces_response(self, space):
-    return self.cf_org_template.render(space=space)
+class OrgSpacesAPIMock:
+
+  def __init__(self):
+    self.cf_template = env.get_template('org_spaces.j2')
+
+  def get_cf_response(self, spaces):
+    return self.cf_template.render(spaces=spaces)
 
 class OrganizationAPIMock:
 

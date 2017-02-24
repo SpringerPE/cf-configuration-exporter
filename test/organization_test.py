@@ -1,7 +1,7 @@
 import unittest
 import json
 from exporter.exporter import ResourceParser, Organization, ResourceParser
-from test.test_helper import OrgUsersAPIMock, SpaceAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock, PrivateDomainAPIMock
+from test.test_helper import OrgUsersAPIMock, OrgSpacesAPIMock, OrganizationAPIMock, QuotaAPIMock, SecGroupAPIMock, PrivateDomainAPIMock
 
 organization = {
   'guid': '1c0e6074-777f-450e-9abc-c42f39d9b75b',
@@ -35,13 +35,19 @@ billing_managers_definition = json.loads(mock_user.get_cf_response(users))
 billing_managers_definition = json.loads(mock_user.get_cf_response(users))
 
 
-space1 = {
+spaces = [
+{
     'guid': '5489e195-c42b-4e61-bf30-323c331ecc01',
     'name': 'space-1'
+},
+{
+    'guid': '5489e195-c42b-4e61-bf30-323c331ecc02',
+    'name': 'space-2'
 }
+]
 
-mock_space = SpaceAPIMock()
-spaces_definition = json.loads(mock_space.get_cf_org_spaces_response(space1))
+mock_space = OrgSpacesAPIMock()
+spaces_definition = json.loads(mock_space.get_cf_response(spaces))
 
 quota = {
   'guid': '80f3e539-a8c0-4c43-9c72-649df53da8cb',
@@ -84,6 +90,7 @@ class TestOrgDefinition(unittest.TestCase):
     fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/managers", managers_definition)
     fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/billing_managers", billing_managers_definition)
     fetcher.register_entity("/v2/spaces/5489e195-c42b-4e61-bf30-323c331ecc01/security_groups", space_sec_groups_response)
+    fetcher.register_entity("/v2/spaces/5489e195-c42b-4e61-bf30-323c331ecc02/security_groups", space_sec_groups_response)
     fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/auditors", users_definition)
     fetcher.register_entity("/v2/organizations/1c0e6074-777f-450e-9abc-c42f39d9b75b/private_domains", private_domains_definition)
 

@@ -4,6 +4,7 @@
   "prev_url": null,
   "next_url": null,
   "resources": [
+  {% for space in spaces %}
     {
       "metadata": {
         "guid": "{{space.guid}}",
@@ -29,6 +30,7 @@
         "security_groups_url": "/v2/spaces/{{space.guid}}/security_groups",
         "staging_security_groups_url": "/v2/spaces/{{space.guid}}/staging_security_groups"
       }
-    }
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
   ]
 }
