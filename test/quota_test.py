@@ -8,15 +8,20 @@ quota = {
   'name': 'default'
 }
 
-mock_quota = QuotaAPIMock()
-quota_definition = ResourceParser.extract_entities(
-                                  json.loads(mock_quota.get_cf_response(quota))
-                              )
-
 class TestQuotaDefinition(unittest.TestCase):
 
+  @classmethod
+  def setUpClass(cls):
+    mock_quota = QuotaAPIMock()
+    cls.quota_definition = ResourceParser.extract_entities(
+                                  json.loads(
+                                  mock_quota.get_cf_response(quota)
+                                )
+                             )
+
+
   def test_quota_can_load_its_config(self):
-    quota = Quota(quota_definition)
+    quota = Quota(self.quota_definition)
     quota.load()
     qd = quota.asdict()
     self.assertEqual(qd["name"], "default")

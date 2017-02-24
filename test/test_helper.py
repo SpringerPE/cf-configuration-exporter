@@ -1,9 +1,24 @@
 from jinja2 import Environment, PackageLoader, select_autoescape
+from exporter.exporter import ResourceParser
+
 
 env = Environment(
     loader=PackageLoader('test', 'templates'),
 )
 
+
+class MockResourceFetcher:
+
+    def __init__(self, client):
+        self._client = client
+        self.entities = {}
+
+    def register_entity(self, url, response):
+        entities = ResourceParser.extract_entities(response)
+        self.entities[url] = entities
+
+    def get_entities(self, resource_url):
+        return self.entities[resource_url]
 
 class UserAPIMock:
 

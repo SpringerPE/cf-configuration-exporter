@@ -1,6 +1,9 @@
 import unittest
 import json
-from test.test_helper import UserAPIMock, SpaceAPIMock, OrganizationAPIMock
+from test.test_helper import (
+    MockResourceFetcher, UserAPIMock, 
+    SpaceAPIMock, OrganizationAPIMock
+)
 from exporter.exporter import User, ResourceParser
 
 user = {
@@ -11,49 +14,49 @@ user = {
     'space_guid': "fc898723-2192-42d9-9567-c0b2e03a3169"
 }
 
-mock_user = UserAPIMock()
-user_definition = ResourceParser.extract_entities(json.loads(mock_user.get_cf_response(user)))
-uaa_user_definition = json.loads(mock_user.get_uaa_response(user))
-
 space = {
     'guid': 'fc898723-2192-42d9-9567-c0b2e03a3169',
-    'name': 'name-2064'
+    'name': 'name-2064',
+    'org_guid': '6e1ca5aa-55f1-4110-a97f-1f3473e771b9'
 }
-mock_space = SpaceAPIMock()
-default_space_response = ResourceParser.extract_entities(json.loads(mock_space.get_cf_response(space)))
 
 organization = {
     'guid': "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
     'name': 'name-1716'
 }
-mock_organization = OrganizationAPIMock()
-default_organization_response = ResourceParser.extract_entities(
-                                                        json.loads(mock_organization.get_cf_response(organization)))
 
-
-class MockResourceFetcher:
-    def __init__(self, client):
-        self._client = client
-        self.entities = {}
-
-    def register_entity(self, url, response):
-        self.entities[url] = response
-
-    def get_entities(self, resource_url):
-        return self.entities[resource_url]
 
 class TestUserDefinition(unittest.TestCase):
 
-  def test_user_can_load_its_config(self):
+  @classmethod
+  def setUpClass(cls):
 
     fetcher = MockResourceFetcher(None)
+    cls.fetcher = fetcher
+
+    mock_user = UserAPIMock()
+    cls.user_definition = ResourceParser.extract_entities(json.loads(mock_user.get_cf_response(user)))
+    cls.uaa_user_definition = json.loads(mock_user.get_uaa_response(user))
+
+    mock_space = SpaceAPIMock()
+    default_space_response = json.loads(mock_space.get_cf_response(space))
+
     fetcher.register_entity("/v2/spaces/%s" % space['guid'], default_space_response)
+
+    mock_organization = OrganizationAPIMock()
+    default_organization_response = json.loads(
+                                                    mock_organization.get_cf_response(organization)
+                                                )
+
     fetcher.register_entity("/v2/organizations/%s" % organization['guid'], default_organization_response)
 
+
+  def test_user_can_load_its_config(self):
+
     user = User(
-        uaa_user_definition, 
-        cf_response=user_definition,
-        fetcher=fetcher)
+        self.uaa_user_definition, 
+        cf_response=self.user_definition,
+        fetcher=self.fetcher)
 
     user.load()
     u = user.asdict()
