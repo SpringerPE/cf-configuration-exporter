@@ -502,14 +502,14 @@ class User(BaseResource):
         name = self.lookup('name')
         if 'givenName' in name:
             return name['givenName']
-        return "not given"
+        return None
 
     @property
     def family_name(self):
         name = self.lookup('name')
         if 'familyName' in name:
             return name['familyName']
-        return "not given"
+        return None
 
     @property
     def password(self):
