@@ -59,13 +59,13 @@ class QuotaAPIMock:
     return self.cf_template.render(quota=quota)
 
 
-class SecGroupAPIMock:
+class SecGroupsAPIMock:
 
   def __init__(self):
     self.cf_template = env.get_template('security_groups.j2')
 
-  def get_cf_space_sg_response(self, sg):
-    return self.cf_template.render(sg=sg)
+  def get_cf_response(self, sgs):
+    return self.cf_template.render(sgs=sgs)
 
 class PrivateDomainsAPIMock:
 

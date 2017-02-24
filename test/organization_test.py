@@ -4,7 +4,7 @@ from exporter.exporter import ResourceParser, Organization, ResourceParser
 from test.test_helper import (
                         OrgUsersAPIMock, OrgSpacesAPIMock, 
                         OrganizationAPIMock, QuotaAPIMock, 
-                        SecGroupAPIMock, PrivateDomainsAPIMock
+                        SecGroupsAPIMock, PrivateDomainsAPIMock
             )
 
 organization = {
@@ -61,8 +61,15 @@ quota = {
 mock_quota = QuotaAPIMock()
 quota_definition = json.loads(mock_quota.get_cf_response(quota))
 
-mock_sec_groups = SecGroupAPIMock()
-space_sec_groups_response = json.loads(mock_sec_groups.get_cf_space_sg_response({}))
+sgs =[
+    {
+    'guid': '38f5bb47-e7c2-4931-8046-ea491757332e',
+    'name': 'secg-1'
+    }
+]
+
+mock_sec_groups = SecGroupsAPIMock()
+space_sec_groups_response = json.loads(mock_sec_groups.get_cf_response(sgs))
 
 domains = [{
     'guid': ""
