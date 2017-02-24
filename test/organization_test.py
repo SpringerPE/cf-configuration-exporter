@@ -4,7 +4,7 @@ from exporter.exporter import ResourceParser, Organization
 from test.test_helper import (
                         OrgUsersAPIMock, OrgSpacesAPIMock, 
                         OrganizationAPIMock, QuotaAPIMock, 
-                        SecGroupsAPIMock, PrivateDomainsAPIMock,
+                        SecGroupAPIMock, PrivateDomainsAPIMock,
                         PrivateDomainAPIMock,
                         MockResourceFetcher, SpaceAPIMock
             )
@@ -77,7 +77,7 @@ class TestOrgDefinition(unittest.TestCase):
     mock_quota = QuotaAPIMock(quota, fetcher)
     quota_definition = mock_quota.dump()
 
-    mock_sec_group1 = SecGroupsAPIMock(sgs[0], fetcher)
+    mock_sec_group1 = SecGroupAPIMock(sgs[0], fetcher)
     mock_space1.add_sec_group(mock_sec_group1)
 
     mock_domain = PrivateDomainAPIMock(domains[0], fetcher)
@@ -91,6 +91,7 @@ class TestOrgDefinition(unittest.TestCase):
     org = Organization(self.organization_definition, fetcher=self.fetcher)
     org.load()
     o = org.asdict()
+    print(o)
     self.assertEqual(o['spaces'][0]['name'], 'space-1')
     self.assertEqual(o['users'][0], {'name': 'user@example.com'})
     self.assertEqual(o['managers'][0], {'name': 'user@example.com'})

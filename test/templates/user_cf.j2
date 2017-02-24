@@ -1,21 +1,21 @@
 {
   "metadata": {
-    "guid": "{{ user.guid }}",
-    "url": "/v2/users/{{ user.guid }}",
+    "guid": "{{resource.guid }}",
+    "url": "/v2/users/{{resource.guid }}",
     "created_at": "2016-06-08T16:41:37Z",
     "updated_at": "2016-06-08T16:41:26Z"
   },
   "entity": {
     "admin": false,
     "active": false,
-    "default_space_guid": "{{ user.space_guid }}",
-    "default_space_url": "/v2/spaces/{{ user.space_guid }}",
-    "spaces_url": "/v2/users/{{ user.guid }}/spaces",
-    "organizations_url": "/v2/users/{{ user.guid }}/organizations",
-    "managed_organizations_url": "/v2/users/{{ user.guid }}/managed_organizations",
-    "billing_managed_organizations_url": "/v2/users/{{ user.guid }}/billing_managed_organizations",
-    "audited_organizations_url": "/v2/users/{{ user.guid }}/audited_organizations",
-    "managed_spaces_url": "/v2/users/{{ user.guid }}/managed_spaces",
-    "audited_spaces_url": "/v2/users/{{ user.guid }}/audited_spaces"
+    "default_space_guid": "{{resource.space_guid }}",
+    "default_space_url": "/v2/spaces/{{resource.space_guid }}",
+    "spaces_url": "/v2/users/{{resource.guid }}/spaces",
+    "organizations_url": "/v2/users/{{resource.guid }}/organizations",
+    "managed_organizations_url": "/v2/users/{{resource.guid }}/managed_organizations",
+    "billing_managed_organizations_url": "/v2/users/{{resource.guid }}/billing_managed_organizations",
+    "audited_organizations_url": "/v2/users/{{resource.guid }}/audited_organizations",
+    "managed_spaces_url": "/v2/users/{{resource.guid }}/managed_spaces",
+    "audited_spaces_url": "/v2/users/{{resource.guid }}/audited_spaces"
   }
 }

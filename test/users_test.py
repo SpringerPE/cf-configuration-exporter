@@ -1,7 +1,7 @@
 import unittest
 import json
 from test.test_helper import (
-    MockResourceFetcher, UserAPIMock, 
+    MockResourceFetcher, UserAPIMock, UserUAAAPIMock,
     SpaceAPIMock, OrganizationAPIMock
 )
 from exporter.exporter import User, ResourceParser
@@ -35,8 +35,9 @@ class TestUserDefinition(unittest.TestCase):
     cls.fetcher = fetcher
 
     mock_user = UserAPIMock()
-    cls.user_definition = ResourceParser.extract_entities(json.loads(mock_user.get_cf_response(user)))
-    cls.uaa_user_definition = json.loads(mock_user.get_uaa_response(user))
+    mock_uaa_user = UserUAAAPIMock()
+    cls.user_definition = ResourceParser.extract_entities(json.loads(mock_user.get_response(user)))
+    cls.uaa_user_definition = json.loads(mock_uaa_user.get_response(user))
 
     mock_space = SpaceAPIMock(space, fetcher)
     default_space_response = mock_space.dump()
