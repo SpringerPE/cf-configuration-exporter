@@ -15,7 +15,7 @@ class TestQuotaDefinition(unittest.TestCase):
     fetcher = MockResourceFetcher(None)
 
     mock_quota = QuotaAPIMock(quota, fetcher)
-    cls.quota_definition = mock_quota.dump()
+    cls.quota_definition = ResourceParser.extract_entities(mock_quota.dump())
 
 
   def test_quota_can_load_its_config(self):

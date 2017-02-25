@@ -75,7 +75,7 @@ class TestOrgDefinition(unittest.TestCase):
     mock_organization.add_space(mock_space1)
 
     mock_quota = QuotaAPIMock(quota, fetcher)
-    quota_definition = mock_quota.dump()
+    mock_quota.dump()
 
     mock_sec_group1 = SecGroupAPIMock(sgs[0], fetcher)
     mock_space1.add_sec_group(mock_sec_group1)
@@ -84,7 +84,7 @@ class TestOrgDefinition(unittest.TestCase):
     mock_organization.add_domain(mock_domain)
   
     mock_space1.dump()
-    cls.organization_definition = mock_organization.dump()
+    cls.organization_definition = ResourceParser.extract_entities(mock_organization.dump())
 
   def test_org_can_load_its_config(self):
 

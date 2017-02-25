@@ -11,15 +11,14 @@ class MockResourceFetcher:
 
     def __init__(self, client):
         self._client = client
-        self.entities = {}
+        self.responses = {}
 
-    def register_entity(self, url, response):
-        entities = ResourceParser.extract_entities(response)
-        self.entities[url] = entities
+    def register_response(self, url, response):
+        self.responses[url] = response
 
     def get_entities(self, resource_url):
-        return self.entities[resource_url]
-
+        body = self.responses[resource_url]
+        return ResourceParser.extract_entities(body)
 
 class BasicMock:
 
@@ -60,14 +59,10 @@ class SpaceAPIMock(BasicMock):
     return self._config['guid']
 
   def dump(self):
-
       self.dump_sec_groups()
-
       space = json.loads(self.get_response(self._config))
-      self._fetcher.register_entity("/v2/spaces/%s" % self.get_guid(), 
-            space
-      )
-      return ResourceParser.extract_entities(space)
+      self._fetcher.register_response("/v2/spaces/%s" % self.get_guid(), space)
+      return space
 
   def add_sec_group(self, sec_group):
     self._security_groups.append(sec_group.config)
@@ -75,7 +70,7 @@ class SpaceAPIMock(BasicMock):
   def dump_sec_groups(self):
     mock_sec_groups = SecGroupsAPIMock()
     sec_groups_definition = json.loads(mock_sec_groups.get_response(self._security_groups))
-    self._fetcher.register_entity("/v2/spaces/%s/security_groups" % self.get_guid(), 
+    self._fetcher.register_response("/v2/spaces/%s/security_groups" % self.get_guid(), 
         sec_groups_definition)
 
 
@@ -100,22 +95,20 @@ class OrganizationAPIMock(BasicMock):
       self.dump_domains()
 
       org = json.loads(self.get_response(self._config))
-      self._fetcher.register_entity("/v2/organizations/%s" % self.get_guid(), 
-            org
-      )
-      return ResourceParser.extract_entities(org)
+      self._fetcher.register_response("/v2/organizations/%s" % self.get_guid(), org)
+      return org
 
   def dump_spaces(self):
     mock_spaces = OrgSpacesAPIMock()
     spaces_definition = json.loads(mock_spaces.get_response(self._spaces))
-    self._fetcher.register_entity("/v2/organizations/%s/spaces" % self.get_guid(), 
+    self._fetcher.register_response("/v2/organizations/%s/spaces" % self.get_guid(), 
                                       spaces_definition)
 
   def dump_domains(self):
     mock_domains = PrivateDomainsAPIMock()
     domains_definition = json.loads(mock_domains.get_response(self._domains))
 
-    self._fetcher.register_entity("/v2/organizations/%s/private_domains" % self.get_guid(), 
+    self._fetcher.register_response("/v2/organizations/%s/private_domains" % self.get_guid(), 
                                       domains_definition)
 
   def add_space(self, space):
@@ -127,13 +120,13 @@ class OrganizationAPIMock(BasicMock):
   def add_private_domains(self, private_domains):
     mock_private_domains = PrivateDomainsAPIMock()
     pd_definition = json.loads(mock_private_domains.get_response(private_domains))
-    self._fetcher.register_entity("/v2/organizations/%s/private_domains" % self.get_guid(), pd_definition)
+    self._fetcher.register_response("/v2/organizations/%s/private_domains" % self.get_guid(), pd_definition)
 
   def _add_users(self, users, kind):
 
     mock_users = OrgUsersAPIMock()
     users_definition = json.loads(mock_users.get_response(users))
-    self._fetcher.register_entity("/v2/organizations/%s/%s" % (self.get_guid(), kind), 
+    self._fetcher.register_response("/v2/organizations/%s/%s" % (self.get_guid(), kind), 
                                           users_definition
                                       )
 
@@ -161,11 +154,9 @@ class QuotaAPIMock(BasicMock):
     return self._config['guid']
 
   def dump(self):
-
-    quota_definition = json.loads(self.get_response(self._config))
-
-    self._fetcher.register_entity("/v2/quota_definitions/%s" % self.get_guid(), quota_definition)
-    return ResourceParser.extract_entities(quota_definition)
+    quota = json.loads(self.get_response(self._config))
+    self._fetcher.register_response("/v2/quota_definitions/%s" % self.get_guid(), quota)
+    return quota
 
 
 class SecGroupAPIMock(BasicMock):
