@@ -1,7 +1,9 @@
 from cfconfigurator.cf import CF, CFException
 from cfconfigurator.uaa import UAA, UAAException
 from .exceptions import ExporterException 
+import exporter.config as cfg
 
+import re
 import sys
 import logging
 import collections
@@ -181,8 +183,14 @@ class Vars(BaseResource):
     """
     properties = []
 
-    def __init__(self, *config_dicts):
+    def __init__(self, *config_dicts, exclude_vars=()):
         super(Vars, self).__init__(*config_dicts)
+        self.exclude_vars = exclude_vars
+
+    def var_excluded(self, name):
+        if name.lower().startswith(self.exclude_vars):
+            return True
+        return False
 
     def asdict(self):
         #Differetly from other resources we do not need
@@ -191,7 +199,7 @@ class Vars(BaseResource):
         return self._config[0]
 
     def aslist(self):
-        return [{'name': name, 'value': value} for name, value in self._config[0].items()]
+        return [{'name': name, 'value': value} for name, value in self._config[0].items() if not self.var_excluded(name)]
 
     def load(self):
         #Nothing to load. The response body is already in the correct format
@@ -566,11 +574,13 @@ class User(BaseResource):
 
 class Exporter:
 
-    def __init__(self, client):
+    def __init__(self, client, exclude_vars=""):
         self._client = client
         self._uaa_client = client.uaa
         self.fetcher = ResourceFetcher(client)
         self.manifest = collections.OrderedDict()
+        exprs = re.split(';|,', exclude_vars)
+        self.exclude_vars = tuple(expr.strip().lower() for expr in exprs if len(expr) > 0)
 
     def generate_manifest(self):
         self.manifest["cf_feature_flags"] = self.add_feature_flags()
@@ -595,7 +605,7 @@ class Exporter:
         var_list = []
         response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
         
-        v = Vars(response)
+        v = Vars(response, exclude_vars=self.exclude_vars)
         my_dict = v.asdict()
         return v.aslist()
 
@@ -603,7 +613,7 @@ class Exporter:
         var_list = []
         response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
         
-        v = Vars(response)
+        v = Vars(response, exclude_vars=self.exclude_vars)
         return v.aslist()
 
     def add_shared_domains(self):
