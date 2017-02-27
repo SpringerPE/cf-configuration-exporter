@@ -91,9 +91,12 @@ class TestOrgDefinition(unittest.TestCase):
     org = Organization(self.organization_definition, fetcher=self.fetcher)
     org.load()
     o = org.asdict()
-    print(o)
+    self.assertEqual(o['domains_private'][0]['name'], 'test.domain')
     self.assertEqual(o['spaces'][0]['name'], 'space-1')
+    self.assertEqual(o['spaces'][0]['allow_ssh'], True)
+    self.assertEqual(o['spaces'][0]['security_groups'][0]['name'], 'secg-1')
     self.assertEqual(o['users'][0], {'name': 'user@example.com'})
     self.assertEqual(o['managers'][0], {'name': 'user@example.com'})
     self.assertEqual(o['billing_managers'][0], {'name': 'user@example.com'})
+    self.assertEqual(o['quota'], 'default')
 
