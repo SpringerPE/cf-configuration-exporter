@@ -494,7 +494,7 @@ class User(BaseResource):
         if cf_response is None:
             raise ExporterException("Please provide the CF configuration for this user resource")
         if fetcher is None:
-            raise ExporterExcetpion("Please provide a valid resource fetcher")
+            raise ExporterException("Please provide a valid resource fetcher")
 
         super(User, self).__init__(*config_dicts, fetcher=fetcher)
         self._cf_response = cf_response
