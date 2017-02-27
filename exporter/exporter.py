@@ -601,13 +601,13 @@ class Exporter:
         return flag_list
 
     def add_staging_environment_variables(self):
-        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
+        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
         
         v = Vars(response, exclude_vars=self.exclude_vars)
         return v.aslist()
 
     def add_running_environment_variables(self):
-        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
+        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
         
         v = Vars(response, exclude_vars=self.exclude_vars)
         return v.aslist()
