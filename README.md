@@ -52,6 +52,8 @@ Define the following env variables:
 `EXPORTER_API_URL` = the endpoint of the Cloudfoundry API
 `EXPORTER_ADMIN_USER` = username used for logging in to CloudFoundry
 `EXPORTER_ADMIN_PASSWORD` = password used for logging in to Cloudfoundry
+`EXPORTER_EXCLUDE_ENV_VARS` = list of `,` separated strings. The env variables whose name starts by
+                                                         one of the prefixes listed will not be exported.
 ```
 
 You can run the utility by executing the run script:
