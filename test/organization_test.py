@@ -46,7 +46,13 @@ quota = {
 sgs =[
     {
     'guid': '38f5bb47-e7c2-4931-8046-ea491757332e',
-    'name': 'secg-1'
+    'name': 'secg-1',
+    'running_default': False
+    },
+    {
+    'guid': '356f5ca6-fcf5-11e6-ac0a-d3f3a5c69f39',
+    'name': 'secg-2',
+    'running_default': True
     }
 ]
 
@@ -80,6 +86,9 @@ class TestOrgDefinition(unittest.TestCase):
     mock_sec_group1 = SecGroupAPIMock(sgs[0], fetcher)
     mock_space1.add_sec_group(mock_sec_group1)
 
+    mock_sec_group2 = SecGroupAPIMock(sgs[1], fetcher)
+    mock_space1.add_sec_group(mock_sec_group2)
+
     mock_domain = PrivateDomainAPIMock(domains[0], fetcher)
     mock_organization.add_domain(mock_domain)
   
@@ -95,6 +104,7 @@ class TestOrgDefinition(unittest.TestCase):
     self.assertEqual(o['spaces'][0]['name'], 'space-1')
     self.assertEqual(o['spaces'][0]['allow_ssh'], True)
     self.assertEqual(o['spaces'][0]['security_groups'][0]['name'], 'secg-1')
+    self.assertEqual(len(o['spaces'][0]['security_groups']), 1)
     self.assertEqual(o['users'][0], {'name': 'user@example.com'})
     self.assertEqual(o['managers'][0], {'name': 'user@example.com'})
     self.assertEqual(o['billing_managers'][0], {'name': 'user@example.com'})

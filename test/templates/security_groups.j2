@@ -21,7 +21,7 @@
             "destination": "198.41.191.47/1"
           }
         ],
-        "running_default": false,
+        "running_default": {% if sg.running_default  %}true{% else %}false{% endif %},
         "staging_default": false,
         "spaces_url": "/v2/security_groups/{{sg.guid}}/spaces",
         "staging_spaces_url": "/v2/security_groups/{{sg.guid}}/staging_spaces"

@@ -264,7 +264,7 @@ class Space(BaseResource):
         if groups is None:
             return
 
-        group_names = [group['name'] for group in groups]
+        group_names = [group['name'] for group in groups if group['running_default'] is False]
         #at this point the group_names contain all the running groups in addition
         #to the groups assigned to this space.
         #That's why we need to remove the duplicates
