@@ -28,6 +28,8 @@ def main():
 		sys.exit(1)
 
 	logger.info("Start exporting configuration...")
+	logger.info("CF api endpoint set to %s" % cfg.api_url)
+	logger.info("Excluding the following env variables from the manifest: %s" % cfg.exclude_env_vars)
 
 	cf_client = CF(cfg.api_url)
 	cf_client.login(cfg.admin_user, cfg.admin_password)
