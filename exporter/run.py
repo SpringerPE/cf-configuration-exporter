@@ -1,13 +1,11 @@
 import sys
 import pyaml
 import logging
-import sys
 
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, PackageLoader
 import exporter.config as cfg
 from .exporter import Exporter
 from cfconfigurator.cf import CF
-from cfconfigurator.uaa import UAA, UAAException
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
