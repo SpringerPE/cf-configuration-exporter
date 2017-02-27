@@ -44,3 +44,6 @@ def main():
 	with open(cfg.output_file ,"w") as stream:
 		stream.write(rendered)
 
+	logger.info("Manifest exported to '%s' file..." % (cfg.output_file))
+
+
