@@ -1,16 +1,15 @@
-from cfconfigurator.cf import CF, CFException
-from cfconfigurator.uaa import UAA, UAAException
+from cfconfigurator.cf import CFException
+from cfconfigurator.uaa import UAAException
 from .exceptions import ExporterException 
-import exporter.config as cfg
 
 import re
 import sys
 import logging
 import collections
-import os
-import exporter
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class ResourceParser:
 
