@@ -17,14 +17,19 @@ env = Environment(
 
 def main():
 
+	valid_config = True
+
 	if cfg.api_url is None:
-		logger.critical("Please set EXPORTER_API_URL env variable")
-		sys.exit(1)
+		logger.critical("Please set EXPORTER_API_URL env variable ie. https://api.test.example.com")
+		valid_config=False
 	if cfg.admin_user is None:
-		logger.critical("Please set EXPORTER_ADMIN_USER env variable")
-		sys.exit(1)
+		logger.critical("Please set EXPORTER_ADMIN_USER env variable ie. admin")
+		valid_config=False
 	if cfg.admin_password is None:
 		logger.critical("Please set EXPORTER_ADMIN_PASSWORD env variable")
+		valid_config=False
+
+	if not valid_config:
 		sys.exit(1)
 
 	logger.info("Start exporting configuration...")
