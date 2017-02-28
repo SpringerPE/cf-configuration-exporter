@@ -68,6 +68,7 @@ setup(
 
     # Include additional files into the package
     include_package_data=True,
+    package_data={'exporter': ['templates/*.j2']},
 
     # additional files need to be installed into
     data_files=[],
@@ -91,6 +92,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3'
     ],
 

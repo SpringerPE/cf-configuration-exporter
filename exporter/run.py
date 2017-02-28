@@ -3,7 +3,7 @@ import pyaml
 import logging
 
 from jinja2 import Environment, PackageLoader
-import exporter.config as cfg
+from . import config as cfg
 from .exporter import Exporter
 from cfconfigurator.cf import CF
 

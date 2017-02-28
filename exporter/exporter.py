@@ -6,12 +6,13 @@ import re
 import sys
 import logging
 import collections
+import functools
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ResourceParser:
+class ResourceParser(object):
 
     @classmethod
     def extract_entities(cls, body):
@@ -30,7 +31,7 @@ class ResourceParser:
         return [obj['metadata'] for obj in body['resources']]
 
 
-class Memoize:
+class Memoize(object):
 
     def __init__(self, make_request):
         self.make_request = make_request
@@ -51,7 +52,7 @@ class Memoize:
         from functools import partial
         return partial(self.__call__, instance)
 
-class ResourceFetcher:
+class ResourceFetcher(object):
     """
     @brief      Help fetching resources from Cloudfoundry
     """
@@ -96,12 +97,12 @@ class ResourceFetcher:
             logger.err(str(cfe))
             raise
 
-class BaseResource:
+class BaseResource(object):
     """
     @brief      Base Class for a generic CF Resource
     """
 
-    def __init__(self, *config_dicts, fetcher=None):
+    def __init__(self, *config_dicts, **kwargs):
         """
         @brief      Constructs the Resource object.
         
@@ -110,7 +111,7 @@ class BaseResource:
         @param      fetcher       The fetcher
         """
         self._prop_dict = collections.OrderedDict()
-        self._fetcher  = fetcher
+        self._fetcher  = kwargs.get('fetcher', None)
         self._config = config_dicts
 
     def lookup(self, name):
@@ -182,9 +183,10 @@ class Vars(BaseResource):
     """
     properties = []
 
-    def __init__(self, *config_dicts, exclude_vars=()):
+    def __init__(self, *config_dicts, **kwargs):
         super(Vars, self).__init__(*config_dicts)
-        self.exclude_vars = exclude_vars
+        self.exclude_vars = kwargs.get('exclude_vars', ())
+
 
     def var_excluded(self, name):
         if name.lower().startswith(self.exclude_vars):
@@ -247,9 +249,10 @@ class Space(BaseResource):
                             "security_groups"
                         ]
     
-    def __init__(self, *config_dicts,  fetcher=None):
-        super(Space, self).__init__(*config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts,  **kwargs):
+        super(Space, self).__init__(*config_dicts, **kwargs)
         self._security_groups = []
+
 
     @property
     def security_groups(self):
@@ -318,8 +321,8 @@ class Organization(BaseResource):
                             "auditors"
                         ]
 
-    def __init__(self, *config_dicts, fetcher=None):
-        super(Organization, self).__init__(*config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts, **kwargs):
+        super(Organization, self).__init__(*config_dicts, **kwargs)
         self._spaces = []
 
     @property
@@ -404,8 +407,8 @@ class SecurityGroup(BaseResource):
                             "rules"
                         ]
 
-    def __init__(self, *config_dicts, fetcher=None):
-        super(SecurityGroup, self).__init__(*config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts, **kwargs):
+        super(SecurityGroup, self).__init__(*config_dicts, **kwargs)
         self._rules = []
 
     @property
@@ -448,8 +451,8 @@ class SecurityRule(BaseResource):
                         ]
 
 
-    def __init__(self, *config_dicts, fetcher=None):
-        super(SecurityRule, self).__init__(*config_dicts, fetcher=fetcher)
+    def __init__(self, *config_dicts, **kwargs):
+        super(SecurityRule, self).__init__(*config_dicts, **kwargs)
         self._name_generator = None
 
     def has_name(self):
@@ -490,13 +493,16 @@ class User(BaseResource):
                             "external_id"
                         ]
 
-    def __init__(self, *config_dicts, cf_response=None, fetcher=None):
+    def __init__(self, *config_dicts, **kwargs):
+        cf_response = kwargs.get('cf_response', None)
+        fetcher  = kwargs.get('fetcher', None)
+
         if cf_response is None:
             raise ExporterException("Please provide the CF configuration for this user resource")
         if fetcher is None:
             raise ExporterException("Please provide a valid resource fetcher")
 
-        super(User, self).__init__(*config_dicts, fetcher=fetcher)
+        super(User, self).__init__(*config_dicts, **kwargs)
         self._cf_response = cf_response
 
     def lookup_cf_response(self, name):
