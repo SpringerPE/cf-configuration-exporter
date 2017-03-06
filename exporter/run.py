@@ -19,16 +19,14 @@ def main():
 
 	valid_config = True
 
-	if cfg.api_url is None:
-		logger.critical("Please set EXPORTER_API_URL env variable ie. https://api.test.example.com")
-		valid_config=False
-	if cfg.admin_user is None:
-		logger.critical("Please set EXPORTER_ADMIN_USER env variable ie. admin")
-		valid_config=False
-	if cfg.admin_password is None:
-		logger.critical("Please set EXPORTER_ADMIN_PASSWORD env variable")
-		valid_config=False
+	logger_message = """Please set
+			EXPORTER_API_URL env variable ie. https://api.test.example.com
+			EXPORTER_ADMIN_USER env variable ie. admin
+			EXPORTER_ADMIN_PASSWORD env variable"""
 
+	if (cfg.api_url is None) or (cfg.admin_user is None) or (cfg.admin_password is None):
+		logger.critical(logger_message)
+		valid_config=False
 	if not valid_config:
 		sys.exit(1)
 
