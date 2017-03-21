@@ -42,6 +42,10 @@ class OrgUsersAPIMock(BasicMock):
   def __init__(self):
     self.template = env.get_template('org_users.j2')
 
+class FeatureFlagsAPIMock(BasicMock):
+
+  def __init__(self):
+    self.template = env.get_template('feature_flags.j2')
 
 class SpaceAPIMock(BasicMock):
 

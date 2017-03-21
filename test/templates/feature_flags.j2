@@ -1,0 +1,10 @@
+[
+{% for flag in resource %}
+  {
+    "name": "{{flag.name}}",
+    "enabled": {% if flag.enabled  %}true{% else %}false{% endif %},
+    "error_message": null,
+    "url": "/v2/config/feature_flags/{{flag.name}}"
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+]
