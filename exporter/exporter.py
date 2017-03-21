@@ -281,10 +281,12 @@ class Space(BaseResource):
         @brief      extract and parse the users for this space
         """
         for user_type in self.user_types:
-            url = "%s_url" % user_type
+            url_string = "%s_url" % user_type
             try:
-                users = self.lookup(url)
+                url = self.lookup(url_string)
+                users = self._fetcher.get_entities(url)
             except AttributeError as ate:
+                logger.err(str(ate))
                 continue
             user_list = []
             for user in users:
