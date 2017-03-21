@@ -1,12 +1,8 @@
 #Configuration variables
-import configargparse
 import logging
+import os
 
 logger = logging.getLogger(__file__)
-
-
-
-config = Config(schema)
 
 api_url = os.environ.get("EXPORTER_API_URL", None)
 admin_user = os.environ.get("EXPORTER_ADMIN_USER", None)
