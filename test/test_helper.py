@@ -37,10 +37,10 @@ class UserAPIMock(BasicMock):
     self.template = env.get_template('user_cf.j2')
 
 
-class OrgUsersAPIMock(BasicMock):
+class ResourceUsersAPIMock(BasicMock):
 
   def __init__(self):
-    self.template = env.get_template('org_users.j2')
+    self.template = env.get_template('org_space_users.j2')
 
 class FeatureFlagsAPIMock(BasicMock):
 
@@ -76,6 +76,26 @@ class SpaceAPIMock(BasicMock):
     sec_groups_definition = json.loads(mock_sec_groups.get_response(self._security_groups))
     self._fetcher.register_response("/v2/spaces/%s/security_groups" % self.get_guid(), 
         sec_groups_definition)
+
+  def _add_users(self, users, kind):
+
+    mock_users = ResourceUsersAPIMock()
+    users_definition = json.loads(mock_users.get_response(users))
+    self._fetcher.register_response("/v2/spaces/%s/%s" % (self.get_guid(), kind), 
+                                          users_definition
+                                      )
+
+  def add_developers(self, developers):
+    self._add_users(developers, "developers")
+
+  def add_managers(self, managers):
+    self._add_users(managers, "managers")
+
+  def add_auditors(self, auditors):
+    self._add_users(auditors, "auditors")
+
+  def add_users(self, users):
+    self._add_users(users, "users")
 
 
 class OrganizationAPIMock(BasicMock):
@@ -128,7 +148,7 @@ class OrganizationAPIMock(BasicMock):
 
   def _add_users(self, users, kind):
 
-    mock_users = OrgUsersAPIMock()
+    mock_users = ResourceUsersAPIMock()
     users_definition = json.loads(mock_users.get_response(users))
     self._fetcher.register_response("/v2/organizations/%s/%s" % (self.get_guid(), kind), 
                                           users_definition

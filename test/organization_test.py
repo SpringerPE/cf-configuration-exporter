@@ -2,7 +2,7 @@ import unittest
 import json
 from exporter.exporter import ResourceParser, Organization
 from test.test_helper import (
-                        OrgUsersAPIMock, OrgSpacesAPIMock, 
+                        ResourceUsersAPIMock, OrgSpacesAPIMock, 
                         OrganizationAPIMock, QuotaAPIMock, 
                         SecGroupAPIMock, PrivateDomainsAPIMock,
                         PrivateDomainAPIMock,
@@ -77,6 +77,9 @@ class TestOrgDefinition(unittest.TestCase):
     mock_organization.add_billing_managers(users)
 
     mock_space1 =  SpaceAPIMock(spaces[0], fetcher)
+    mock_space1.add_auditors(users)
+    mock_space1.add_managers(users)
+    mock_space1.add_developers(users)
 
     mock_organization.add_space(mock_space1)
 
@@ -104,6 +107,8 @@ class TestOrgDefinition(unittest.TestCase):
     self.assertEqual(o['spaces'][0]['name'], 'space-1')
     self.assertEqual(o['spaces'][0]['allow_ssh'], True)
     self.assertEqual(o['spaces'][0]['security_groups'][0]['name'], 'secg-1')
+    print(o['spaces'][0])
+    self.assertEqual(o['spaces'][0]['developers'][0], {'name': 'user@example.com'})
     self.assertEqual(len(o['spaces'][0]['security_groups']), 1)
     self.assertEqual(o['users'][0], {'name': 'user@example.com'})
     self.assertEqual(o['managers'][0], {'name': 'user@example.com'})

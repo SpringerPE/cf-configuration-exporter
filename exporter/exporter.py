@@ -291,7 +291,7 @@ class Space(BaseResource):
             user_list = []
             for user in users:
                 if 'username' in user:
-                    user_list.append(user['username'])
+                    user_list.append({'name': user['username']})
             if len(user_list) > 0:
                 setattr(self, user_type, user_list)
 
