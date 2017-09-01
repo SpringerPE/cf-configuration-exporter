@@ -1,0 +1,27 @@
+{% import "terraform/macros.j2" as macros %}
+
+{% for organisation in manifest["cf_orgs"] %}
+resource "cf_org" "org_{{ organisation["name"] }}" {
+	name = "{{ organisation["name"] }}"
+	quota = "{{ organisation["quota"] }}"
+	
+	{{ macros.render_list_attribute("managers", "managers", organisation) }}
+	{{ macros.render_list_attribute("billing_managers", "billing_managers", organisation) }}
+	{{ macros.render_list_attribute("auditors", "auditors", organisation) }}
+}
+
+{% for space in organisation["spaces"] %}
+resource "cf_space" "space_{{ space["name"] }}" {
+	name = "{{ space["name"] }}"
+	org = "{{ organisation["name"] }}"
+	render_if_present("quota", "quota", space, '"')
+
+	allow_ssh = {% if space["allow_ssh"] %}true{% else %}false{% endif %}
+
+	{{ macros.render_list_attribute("asgs", "security_groups", space) }}
+	{{ macros.render_list_attribute("managers", "managers", space) }}
+	{{ macros.render_list_attribute("developers", "developers", space) }}
+	{{ macros.render_list_attribute("auditors", "auditors", space) }}
+}
+{% endfor %}
+{% endfor %}

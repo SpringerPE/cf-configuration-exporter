@@ -1,0 +1,13 @@
+{% import "terraform/macros.j2" as macros %}
+
+{% for resource in manifest["cf_users"] %}
+resource "cf_user" "user_{{ resource["name"] }}" {
+	name = "{{ resource["name"] }}"
+	{{ macros.render_if_present("password", "password", resource, quot='"') }}
+	{{ macros.render_if_present("origin", "origin", resource, quot='"') }}
+	{{ macros.render_if_present("given_name", "given_name", resource, quot='"') }}
+	{{ macros.render_if_present("family_name", "family_name", resource, quot='"') }}
+	{{ macros.render_if_present("email", "email", resource, quot='"') }}
+}
+
+{% endfor %}

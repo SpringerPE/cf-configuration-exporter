@@ -1,6 +1,7 @@
 import sys
 import pyaml
 import logging
+import os
 
 from jinja2 import Environment, PackageLoader
 from . import config as cfg
@@ -12,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 env = Environment(
     loader=PackageLoader('exporter', 'templates'),
+    trim_blocks=True,
+    lstrip_blocks=True
 )
 
 
@@ -45,15 +48,27 @@ def main():
 	exp = Exporter(cf_client, exclude_vars=cfg.exclude_env_vars)
 	exp.generate_manifest()
 
-	manifest = {key: pyaml.dump({key:value}) for key, value in exp.manifest.items()}
+	export_cf_configurator_config(exp.manifest, cfg.output_file)
+	export_cf_terraform_config(exp.manifest)
+
+def export_cf_terraform_config(manifest, output_folder="output_terraform"):
+
+	if not os.path.exists(output_folder):
+		os.makedirs(output_folder)
+
+	for template_name in ["quota", "org", "security_group", "config", "user"]:
+		with open(os.path.join(output_folder, template_name + ".tf") ,"w") as stream:
+			template = env.get_template('terraform/'+ template_name + ".j2")
+			rendered = template.render(manifest=manifest)
+			stream.write(rendered)
+
+def export_cf_configurator_config(manifest, output_file="output"):
+	manifest = {key: pyaml.dump({key:value}) for key, value in manifest.items()}
 
 	template = env.get_template('manifest.j2')
 	rendered = template.render(manifest=manifest)
 
-
-	with open(cfg.output_file ,"w") as stream:
+	with open(output_file ,"w") as stream:
 		stream.write(rendered)
 
 	logger.info("Manifest exported to '%s' file..." % (cfg.output_file))
-
-

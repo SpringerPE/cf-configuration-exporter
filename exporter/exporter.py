@@ -433,9 +433,9 @@ class SecurityGroup(BaseResource):
         for index, rule in enumerate(rules):
             new_rule = SecurityRule(rule)
             new_rule.name_generator = name_generator
-            if new_rule.has_name():
-                new_rule.load()
-                self._rules.append(new_rule.asdict())
+            #if new_rule.has_name():
+            new_rule.load()
+            self._rules.append(new_rule.asdict())
 
 class SecurityRule(BaseResource):
     """

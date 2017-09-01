@@ -1,0 +1,15 @@
+{% macro render_if_present(attr_name, key_name, resource, quot="") -%}
+{% if key_name in resource -%}
+{{ attr_name }} = {{quot}}{{ resource[key_name] }}{{quot}}
+{% endif -%}
+{% endmacro -%}
+
+{% macro render_list_attribute(attr_name, resource_key, resource, item_key="name") -%}
+	{{ attr_name }} = [
+	{% if resource_key in resource %}
+	{% for item in resource[resource_key] %}
+	"{{ item[item_key] }}"{{ "," if not loop.last }}
+	{% endfor %}
+	{% endif %}
+	]
+{% endmacro -%}

@@ -1,0 +1,19 @@
+{% import "terraform/macros.j2" as macros %}
+	
+{% for asg in manifest["cf_security_groups"] %}
+"resource" "asg_{{  asg["name"] }}" {
+	
+	name = "{{  asg["name"] }}"
+
+	{% for rule in asg["rules"] %}
+	rule = {
+		protocol = "{{  rule["protocol"] }}"
+		destination = "{{  rule["destination"] }}"
+		{{ macros.render_if_present("ports", "ports", rule, quot='"') }}
+		{{ macros.render_if_present("type", "type", rule) }}
+		{{ macros.render_if_present("code", "code", rule) }}
+		{{ macros.render_if_present("logs", "logs", rule) }}
+	}
+	{% endfor %}
+}
+{% endfor %}

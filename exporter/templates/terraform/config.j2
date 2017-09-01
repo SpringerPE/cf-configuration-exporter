@@ -1,0 +1,37 @@
+
+{% macro render_feature_flag(ff_map, resource) -%}
+{% if "cf_feature_flags" in resource %}
+feature_flags = {
+	{% set cf_feature_flags = resource["cf_feature_flags"] %}
+	{% for flag in cf_feature_flags %}
+	{% if flag["name"] in ff_map %}
+		{{ ff_map[flag["name"]] }} = {% if flag["value"] %}"enabled"{% else %}"disabled"{% endif %}
+	{% endif %}
+
+	{% endfor %}
+}
+{% endif %}
+{% endmacro -%}
+
+{% set ff_map = {
+	"user_org_creation": "user_org_creation",
+	"private_domain_creation": "private_domain_creation",
+	"app_bits_upload": "app_bits_upload",
+	"app_scaling": "app_scaling",
+	"route_creation": "route_creation",
+	"service_instance_creation": "service_instance_creation",
+	"diego_docker": "diego_docker",
+	"set_roles_by_username": "set_roles_by_username",
+	"unset_roles_by_username": "unset_roles_by_username",
+	"task_creation": "task_creation",
+	"env_var_visibility": "env_var_visibility",
+	"space_scoped_private_broker_creation": "space_scoped_private_broker_creation",
+	"space_developer_env_var_visibility": "space_developer_env_var_visibility"
+	} 
+%}
+
+resource "cf_config" "cf_config" {
+
+	{{ render_feature_flag(ff_map, manifest) }}
+
+}
