@@ -213,7 +213,9 @@ class Quota(BaseResource):
     Docs: https://docs.cloudfoundry.org/adminguide/quota-plans.html
      """
 
-    properties = [  "name", 
+    properties = [
+                            "guid",
+                            "name", 
                             "total_services", 
                             "total_routes", 
                             "memory_limit", 
@@ -241,6 +243,7 @@ class Space(BaseResource):
                         ]
 
     properties = [
+                            "guid",
                             "name", 
                             "allow_ssh", 
                             "developers", 
@@ -313,6 +316,7 @@ class Organization(BaseResource):
                         ]
 
     properties = [
+                            "guid",
                             "name", 
                             "quota",
                             "domains_private",
@@ -365,9 +369,9 @@ class Organization(BaseResource):
         @brief      Loads all the spaces for this org.
         """
         url = self.lookup("spaces_url")
-        spaces = self._fetcher.get_entities(url)
+        spaces = self._fetcher.get_resources(url)
         for space in spaces:
-            new_space = Space(space, fetcher=self._fetcher)
+            new_space = Space(space['entity'], space['metadata'], fetcher=self._fetcher)
             new_space.load()
             self._spaces.append(new_space.asdict())
     
@@ -483,6 +487,7 @@ class User(BaseResource):
     """
 
     properties = [
+                            "guid",
                             "name",
                             "password",
                             "active", 
@@ -505,13 +510,18 @@ class User(BaseResource):
             raise ExporterException("Please provide a valid resource fetcher")
 
         super(User, self).__init__(*config_dicts, **kwargs)
-        self._cf_response = cf_response
+        self._cf_response = cf_response['entity']
+        self._cf_metadata = cf_response['metadata']
 
     def lookup_cf_response(self, name):
         config = self._cf_response
         if name in config:
                 return config[name] 
         raise AttributeError("%s not found" % name)
+
+    @property
+    def guid(self):
+        return self._cf_metadata['guid']
 
     @property
     def external_id(self):
@@ -637,10 +647,10 @@ class Exporter:
             return group_list
 
     def add_quotas(self):
-        response = self.fetcher.get_entities("/v2/quota_definitions")
+        response = self.fetcher.get_resources("/v2/quota_definitions")
         quota_list = []
         for quota in response:
-            q = Quota(quota)
+            q = Quota(quota['entity'], quota['metadata'])
             q.load()
             quota_list.append(q.asdict())
         return quota_list
@@ -653,17 +663,17 @@ class Exporter:
                 user_uaa = self._uaa_client.user_get(user['metadata']['guid'])
             except UAAException as uaaexp:
                 continue
-            user_cf = user['entity']
+            user_cf = user
             u = User(user_uaa, cf_response=user_cf, fetcher=self.fetcher)
             u.load()
             user_list.append(u.asdict())
         return user_list
 
     def add_orgs(self):
-        response = self.fetcher.get_entities("/v2/organizations")
+        response = self.fetcher.get_resources("/v2/organizations")
         org_list = []
         for org in response:
-            o = Organization(org, fetcher=self.fetcher)
+            o = Organization(org['entity'], org['metadata'], fetcher=self.fetcher)
             o.load()
             org_list.append(o.asdict())
         return org_list
