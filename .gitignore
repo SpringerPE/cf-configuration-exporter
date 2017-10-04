@@ -68,3 +68,6 @@ ENV/
 
 # Vagrant
 .vagrant/
+
+# Terraform and command output
+output*
