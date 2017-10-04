@@ -1,0 +1,82 @@
+{
+    "version": 1,
+    "terraform_version": "0.10.2",
+    "serial": 1,
+    "lineage": "6008d8d2-e5d9-43ab-95cb-2d9fc048829f",
+    "modules": [
+    {
+        "path": [
+            "root"
+        ],
+        "outputs": {},
+        "resources": {
+{% for quota in manifest["cf_quotas"] %}
+            "cf_quota.quota_{{ quota["name"]}}": {
+                "type": "cf_quota",
+                "depends_on": [],
+                "primary": {
+                    "id": "{{ quota["guid"] }}",
+                    "attributes": {
+                        "name": "{{ quota["name"]}}"
+                    },
+                    "meta": {},
+                    "tainted": false
+                },
+            "deposed": [],
+            "provider": ""
+            }{% if not loop.last or manifest["cf_users"]|length > 0 %},{% endif %}
+{% endfor %}
+{% for user in manifest["cf_users"] %}
+            "cf_user.user_{{ user["resource_name"] }}": {
+                "type": "cf_user",
+                "depends_on": [],
+                "primary": {
+                    "id": "{{ user["guid"] }}",
+                    "attributes": {
+                        "name": "{{ user["name"]}}"
+                    },
+                    "meta": {},
+                    "tainted": false
+                },
+                "deposed": [],
+                "provider": ""
+            }{% if not loop.last or manifest["cf_orgs"]|length > 0 %},{% endif %}
+{% endfor %}
+{% for org in manifest["cf_orgs"] %}
+            "cf_org.org_{{ org["resource_name"] }}": {
+                "type": "cf_org",
+                "depends_on": [],
+                "primary": {
+                    "id": "{{ org["guid"] }}",
+                    "attributes": {
+                        "name": "{{ org["name"] }}"
+                    },
+                    "meta": {},
+                    "tainted": false
+                },
+                "deposed": [],
+                "provider": ""
+            }{% if org["spaces"]|length > 0 %},{% endif %}
+{% for space in org["spaces"] %}
+            "cf_space.space_{{ space["resource_name"] }}": {
+                "type": "cf_space",
+                "primary": {
+                    "id": "{{ space["guid"] }}",
+                    "attributes": {
+                        "name": "{{ space["name"] }}",
+                        "org": "${cf_org.{{org["resource_name"]}}.id}"
+                    },
+                    "meta": {},
+                    "tainted": false
+                },
+                "deposed": [],
+                "provider": ""
+            }{% if not loop.last %},{% endif %}
+{% endfor %}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+},
+            "depends_on": []
+        }
+    ]
+}

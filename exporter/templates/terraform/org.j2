@@ -1,27 +1,54 @@
-{% import "terraform/macros.j2" as macros %}
-
 {% for organisation in manifest["cf_orgs"] %}
-resource "cf_org" "org_{{ organisation["name"] }}" {
+resource "cf_org" "org_{{ organisation["resource_name"] }}" {
 	name = "{{ organisation["name"] }}"
-	quota = "{{ organisation["quota"] }}"
-	
-	{{ macros.render_list_attribute("managers", "managers", organisation) }}
-	{{ macros.render_list_attribute("billing_managers", "billing_managers", organisation) }}
-	{{ macros.render_list_attribute("auditors", "auditors", organisation) }}
+	{% if "quota" in organisation %}
+	quota = "${cf_quota.quota_{{ organisation["quota"] }}.id}"
+	{% endif %}
+	managers = [
+	{% for manager in organisation["managers"] %}
+	"{{ manager}}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
+	billing_managers = [
+	{% for billing_manager in organisation["billing_managers"] %}
+	"{{ billing_manager }}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
+	auditors = [
+	{% for auditor in organisation["auditors"] %}
+	"{{ auditor }}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
 }
 
 {% for space in organisation["spaces"] %}
-resource "cf_space" "space_{{ space["name"] }}" {
+resource "cf_space" "space_{{ space["resource_name"] }}" {
 	name = "{{ space["name"] }}"
-	org = "{{ organisation["name"] }}"
-	render_if_present("quota", "quota", space, '"')
-
-	allow_ssh = {% if space["allow_ssh"] %}true{% else %}false{% endif %}
-
-	{{ macros.render_list_attribute("asgs", "security_groups", space) }}
-	{{ macros.render_list_attribute("managers", "managers", space) }}
-	{{ macros.render_list_attribute("developers", "developers", space) }}
-	{{ macros.render_list_attribute("auditors", "auditors", space) }}
+	org = "${cf_org.org_{{ organisation["name"] }}.id}"
+	{% if "quota" in space %}
+	quota = "{{ space["quota"] }}"
+	{% endif %}
+	allow_ssh = {{ space["allow_ssh"] }}
+	asgs = [
+	{% for asg in space["asgs"] %}
+	"{{ asg["name"] }}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
+	managers = [
+	{% for manager in space["managers"] %}
+	"{{ manager }}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
+	developers = [
+	{% for developer in space["developers"] %}
+	"{{ developer }}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
+	auditors = [
+	{% for auditor in space["auditors"] %}
+	"{{ auditor }}"{% if not loop.last -%},{% endif -%}
+	{% endfor %}
+	]
 }
 {% endfor %}
 {% endfor %}

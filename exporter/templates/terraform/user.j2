@@ -1,13 +1,21 @@
-{% import "terraform/macros.j2" as macros %}
-
 {% for resource in manifest["cf_users"] %}
-resource "cf_user" "user_{{ resource["name"] }}" {
+resource "cf_user" "user_{{ resource["resource_name"]}}" {
 	name = "{{ resource["name"] }}"
-	{{ macros.render_if_present("password", "password", resource, quot='"') }}
-	{{ macros.render_if_present("origin", "origin", resource, quot='"') }}
-	{{ macros.render_if_present("given_name", "given_name", resource, quot='"') }}
-	{{ macros.render_if_present("family_name", "family_name", resource, quot='"') }}
-	{{ macros.render_if_present("email", "email", resource, quot='"') }}
+	{% if "password" in resource %}
+	password = "{{ resource["password"] }}"
+	{% endif %}
+	origin = "{{ resource["origin"] }}"
+	{%  if "given_name" in resource %}
+	given_name = "{{ resource["given_name"] }}"
+	{% endif %}
+	{% if "family_name" in resource %}
+	family_name = "{{ resource["family_name"] }}"
+	{% endif %}
+	{% if "email" in resource %}
+	email = "{{ resource["email"] }}"
+	{% endif %}
+	lifecycle {
+        		ignore_changes = ["groups"]
+    	}
 }
-
 {% endfor %}

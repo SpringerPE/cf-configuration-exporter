@@ -1,17 +1,21 @@
-{% import "terraform/macros.j2" as macros %}
-
 {% for resource in manifest["cf_quotas"] %}
 resource "cf_quota" "quota_{{ resource["name"] }}" {
 	name = "{{ resource["name"] }}"
+	allow_paid_service_plans = "{{ resource["allow_paid_service_plans"] }}"
+	total_memory = {{ resource["total_memory"] }}
+	{% if "instance_memory" in resource %}
+	instance_memory = {{ resource["instance_memory"] }}
+	{% endif %}
 	total_services = {{ resource["total_services"] }}
 	total_routes = {{ resource["total_routes"] }}
-	total_memory = {{ resource["memory_limit"] }}
-	{{ macros.render_if_present("instance_memory", "instance_memory_limit", resource) }}
-	{{ macros.render_if_present("total_route_ports", "total_reserved_route_ports", resource) }}
-	{{ macros.render_if_present("total_app_instances", "app_instance_limit", resource) }}
-	{{ macros.render_if_present("total_private_domains", "total_private_domains", resource) }}
-	allow_paid_service_plans = {% if resource["non_basic_services_allowed"] %}true{% else %}false{% endif %}
-
+	{% if "total_route_ports" in resource %}
+	total_route_ports = {{ resource["total_route_ports"] }}
+	{% endif %}
+	{% if "total_app_instances" in resource %}
+	total_app_instances = {{ resource["total_app_instances"] }}
+	{% endif %}
+	{% if "total_private_domains" in resource %}
+	total_private_domains = {{ resource["total_private_domains"] }}
+	{% endif %}
 }
-
 {% endfor %}
