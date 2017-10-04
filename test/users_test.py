@@ -36,7 +36,7 @@ class TestUserDefinition(unittest.TestCase):
 
     mock_user = UserAPIMock()
     mock_uaa_user = UserUAAAPIMock()
-    cls.user_definition = ResourceParser.extract_entities(json.loads(mock_user.get_response(user)))
+    cls.user_definition = json.loads(mock_user.get_response(user))
     cls.uaa_user_definition = json.loads(mock_uaa_user.get_response(user))
 
     mock_space = SpaceAPIMock(space, fetcher)

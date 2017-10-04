@@ -20,6 +20,10 @@ class MockResourceFetcher:
         body = self.responses[resource_url]
         return ResourceParser.extract_entities(body)
 
+    def get_resources(self, resource_url):
+        body = self.responses[resource_url]
+        return ResourceParser.extract_resources(body)
+
 class BasicMock:
 
   def get_response(self, resource):
