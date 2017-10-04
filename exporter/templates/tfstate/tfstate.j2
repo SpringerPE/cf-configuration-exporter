@@ -10,6 +10,36 @@
         ],
         "outputs": {},
         "resources": {
+{% for asg in manifest["cf_security_groups"] %}
+            "cf_asg.asg_{{ asg["name"] }}": {
+                "type": "cf_asg",
+                "depends_on": [],
+                "primary": {
+                    "id": "{{ asg["guid"] }}",
+                        "attributes": {
+                            "name": "{{ asg["name"] }}",
+                            "rule.#": "{{ asg["rules"]|length }}",
+{% for rule in asg["rules"] %}
+                            "rule.{{ loop.index }}.protocol": "{{ rule["protocol"] }}",
+                            "rule.{{ loop.index }}.destination": "{{ rule["destination"] }}",
+                            "rule.{{ loop.index }}.type": "{{ rule["type"] }}",
+                            "rule.{{ loop.index }}.code": "{{ rule["code"] }}",
+                            "rule.{{ loop.index }}.log": "{{ rule["log"] }}"{% if "description" in rule %},
+                            "rule.{{ loop.index }}.description": "{{ rule["description"] }}"
+                            {% endif %}{% if "ports" in rule %},
+                            "rule.{{ loop.index }}.ports": "{{ rule["ports"] }}"
+                            {% endif %}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+                        },
+                        "meta": {},
+                        "tainted": false
+                    },
+                    "deposed": [],
+                    "provider": ""
+                }{% if not loop.last or manifest["cf_quotas"]|length > 0 %},{% endif %}
+
+{% endfor %}
 {% for quota in manifest["cf_quotas"] %}
             "cf_quota.quota_{{ quota["name"]}}": {
                 "type": "cf_quota",

@@ -407,6 +407,7 @@ class SecurityGroup(BaseResource):
     """
 
     properties = [
+                            "guid",
                             "name", 
                             "running_default",
                             "staging_default", 
@@ -638,10 +639,10 @@ class Exporter:
         return domain_list
 
     def add_security_groups(self):
-            response = self.fetcher.get_entities("/v2/security_groups")
+            response = self.fetcher.get_resources("/v2/security_groups")
             group_list = []
             for group in response:
-                g = SecurityGroup(group)
+                g = SecurityGroup(group['entity'], group['metadata'])
                 g.load()
                 group_list.append(g.asdict())
             return group_list

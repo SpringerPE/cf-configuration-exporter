@@ -59,7 +59,7 @@ def export_cf_terraform_config(manifest, output_folder="output_terraform"):
 	if not os.path.exists(output_folder):
 		os.makedirs(output_folder)
 
-	for template_name in ["user", "org", "quota"]:
+	for template_name in ["user", "org", "quota", "security_group"]:
 		with open(os.path.join(output_folder, template_name + ".tf") ,"w") as stream:
 			template = env.get_template('terraform/'+ template_name + ".j2")
 			rendered = template.render(manifest=manifest)

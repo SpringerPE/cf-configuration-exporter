@@ -1,5 +1,7 @@
 import re
 
+from .exceptions import FieldNotOptionalException
+
 class TerraformMutation(object):
 
 	user_fmt = '${{cf_user.user_{}.id}}'
@@ -10,19 +12,24 @@ class TerraformMutation(object):
 	def manifest_to_terraform(self):
 		tf_manifest = {}
 
+		print("Mutating users...")
 		tf_manifest["cf_users"] = self.cf_users_to_terraform(self.cf_dict)
+		print("Mutating orgs...")
 		tf_manifest["cf_orgs"] = self.cf_orgs_to_terraform(self.cf_dict)
+		print("Mutating quotas...")
 		tf_manifest["cf_quotas"] = self.cf_quotas_to_terraform(self.cf_dict)
+		print("Mutating security_groups...")
+		tf_manifest["cf_security_groups"] = self.cf_security_groups_to_terraform(self.cf_dict)
 
 		return tf_manifest
 
 	def to_terraform_resource_name(self, name):
 		return re.sub(r"[@\.]", "_", name)
 
-	def map_field(self, tf_field, tf_dict, cf_field, cf_dict, optional=False, mapping={}, **kwargs):
+	def map_field(self, tf_field, tf_dict, cf_field, cf_dict, optional=False, mapping={}, default=None):
 		if optional == False:
 			if not cf_field in cf_dict:
-				print("Not optional")
+				raise FieldNotOptionalException("Field {} is not optional".format(tf_field))
 
 		if cf_field in cf_dict:
 			if cf_dict[cf_field] in mapping:
@@ -31,8 +38,8 @@ class TerraformMutation(object):
 				mapped_field = cf_dict[cf_field]
 				if mapped_field != None:
 					tf_dict[tf_field] = mapped_field
-		elif "default" in kwargs:
-			tf_dict[tf_field] = kwargs["default"]
+		elif default:
+			tf_dict[tf_field] = default
 
 	def map_list_field(self, tf_field, tf_dict, cf_field, cf_dict, cf_key=None, fmt='{}'):
 		tf_dict[tf_field] = []
@@ -43,6 +50,38 @@ class TerraformMutation(object):
 				else:
 					tf_dict[tf_field].append(fmt.format(elem))
 
+
+	def cf_security_groups_to_terraform(self, cf_dict):
+		cf_asgs = cf_dict["cf_security_groups"]
+		tf_asgs = []
+
+		for cf_asg in cf_asgs:
+			tf_asg = {}
+			self.map_field("name", tf_asg, "name", cf_asg)
+			self.map_field("guid", tf_asg, "guid", cf_asg)
+
+			tf_asg["rules"] = self.cf_security_rules_to_terraform(cf_asg["rules"])
+
+			tf_asgs.append(tf_asg)
+
+		return tf_asgs
+
+	def cf_security_rules_to_terraform(self, rules):
+		tf_rules = []
+
+		for cf_rule in rules:
+			tf_rule = {}
+			self.map_field("protocol", tf_rule, "protocol", cf_rule)
+			self.map_field("destination", tf_rule, "destination", cf_rule)
+			self.map_field("ports", tf_rule, "ports", cf_rule, optional=True)
+			self.map_field("description", tf_rule, "description", cf_rule, optional=True)
+			self.map_field("type", tf_rule, "type", cf_rule, optional=True, default=0)
+			self.map_field("code", tf_rule, "code", cf_rule, optional=True, default=0)
+			self.map_field("log", tf_rule, "log", cf_rule, optional=True, default="false")
+
+			tf_rules.append(tf_rule)
+
+		return tf_rules
 
 	def cf_quotas_to_terraform(self, cf_dict):
 		cf_quotas = cf_dict["cf_quotas"]
@@ -76,7 +115,7 @@ class TerraformMutation(object):
 			tf_space["org"] = org
 			self.map_field("guid", tf_space, "guid", cf_space)
 			self.map_field("name", tf_space, "name", cf_space)
-			self.map_field("quota", tf_space, "quota", cf_space, optional=False)
+			self.map_field("quota", tf_space, "quota", cf_space, optional=True)
 			self.map_field("allow_ssh", tf_space, "allow_ssh", cf_space, mapping={True: "true", False: "false"})
 
 			self.map_list_field("asgs", tf_space, "security_groups", cf_space)
