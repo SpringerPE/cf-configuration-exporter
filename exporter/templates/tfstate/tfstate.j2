@@ -10,6 +10,20 @@
         ],
         "outputs": {},
         "resources": {
+            "cf_config.cf_config": {
+                "type": "cf_config",
+                "depends_on": [],
+                "primary": {
+                    "id": "config",
+                    "attributes": {
+                        "id": "config"
+                    },
+                    "meta": {},
+                    "tainted": false
+                },
+                "deposed": [],
+                "provider": ""
+            },
 {% for asg in manifest["cf_security_groups"] %}
             "cf_asg.asg_{{ asg["name"] }}": {
                 "type": "cf_asg",

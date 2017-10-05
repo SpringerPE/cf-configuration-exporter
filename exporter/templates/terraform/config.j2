@@ -1,5 +1,7 @@
 resource "cf_config" "cf_config" {
+	feature_flags { 
 	{% for flag in manifest["cf_feature_flags"] %}
 	{{ flag.name }} = "{{ flag.value }}"
 	{% endfor %}
+	}
 }

@@ -20,7 +20,8 @@ class TerraformMutation(object):
 		tf_manifest["cf_quotas"] = self.cf_quotas_to_terraform(self.cf_dict)
 		print("Mutating security_groups...")
 		tf_manifest["cf_security_groups"] = self.cf_security_groups_to_terraform(self.cf_dict)
-
+		print("Mutating flags...")
+		tf_manifest["cf_feature_flags"] = self.cf_feature_flags_to_terraform(self.cf_dict)
 		return tf_manifest
 
 	def to_terraform_resource_name(self, name):
@@ -50,6 +51,33 @@ class TerraformMutation(object):
 				else:
 					tf_dict[tf_field].append(fmt.format(elem))
 
+
+	def cf_feature_flags_to_terraform(self, cf_dict):
+		cf_flags = cf_dict["cf_feature_flags"]
+		tf_flags = []
+
+		supported_flags = {
+			"user_org_creation": None,
+			"private_domain_creation": None,
+			"app_bits_upload": None,
+			"app_scaling": None,
+			"route_creation": None,
+			"service_instance_creation": None,
+			"diego_docker": None,
+			"set_roles_by_username": None,
+			"unset_roles_by_username": None,
+			"task_creation": None
+		}
+
+		flags_to_port = [flag for flag in cf_flags if flag['name'] in supported_flags]
+
+		for flag in flags_to_port:
+			flag_name = flag['name'] if supported_flags[flag['name']] == None else supported_flags[flag['name']]
+			flag_value = "enabled" if flag['value'] else "disabled"
+
+			tf_flags.append({'name': flag_name, 'value': flag_value})
+		
+		return tf_flags
 
 	def cf_security_groups_to_terraform(self, cf_dict):
 		cf_asgs = cf_dict["cf_security_groups"]
@@ -148,7 +176,6 @@ class TerraformMutation(object):
 		return tf_orgs
 
 	def cf_users_to_terraform(self, cf_dict):
-		
 		cf_users = cf_dict["cf_users"]
 		tf_users = []
 
