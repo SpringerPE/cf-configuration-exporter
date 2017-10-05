@@ -9,7 +9,7 @@ from jinja2 import Environment, PackageLoader
 from . import config as cfg
 from .exporter import Exporter
 from cfconfigurator.cf import CF
-from .mutations import TerraformMutation
+from .mutations import TerraformMutation, CFConfiguratorMutation
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,8 +51,12 @@ def main():
 	exp.generate_manifest()
 	
 	tm = TerraformMutation(exp.manifest)
-	terraform_manifest = tm.manifest_to_terraform()
+	terraform_manifest = tm.mutate_manifest()
 	export_cf_terraform_config(terraform_manifest)
+
+	cc = CFConfiguratorMutation(exp.manifest)
+	cc_manifest = cc.mutate_manifest()
+	export_cf_configurator_config(cc_manifest)
 
 def export_cf_terraform_config(manifest, output_folder="output_terraform"):
 
