@@ -31,7 +31,7 @@ resource "cf_space" "space_{{ space["resource_name"] }}" {
 	allow_ssh = {{ space["allow_ssh"] }}
 	asgs = [
 	{% for asg in space["asgs"] %}
-	"{{ asg["name"] }}"{% if not loop.last -%},{% endif -%}
+	"${cf_asg.asg_{{ asg["name"] }}.id}"{% if not loop.last -%},{% endif -%}
 	{% endfor %}
 	]
 	managers = [
