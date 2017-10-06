@@ -1,4 +1,4 @@
-#Configuration variables
+# Configuration variables
 import logging
 import os
 

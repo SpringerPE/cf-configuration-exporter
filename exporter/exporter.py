@@ -1,6 +1,6 @@
 from cfconfigurator.cf import CFException
 from cfconfigurator.uaa import UAAException
-from .exceptions import ExporterException 
+from .exceptions import ExporterException
 
 import re
 import sys
@@ -52,14 +52,15 @@ class Memoize(object):
         from functools import partial
         return partial(self.__call__, instance)
 
+
 class ResourceFetcher(object):
+
     """
     @brief      Help fetching resources from Cloudfoundry
     """
 
     def __init__(self, client):
         self._client = client
-
 
     def get_raw(self, resource_url):
         response = self.response(resource_url)
@@ -97,7 +98,9 @@ class ResourceFetcher(object):
             logger.err(str(cfe))
             raise
 
+
 class BaseResource(object):
+
     """
     @brief      Base Class for a generic CF Resource
     """
@@ -105,13 +108,13 @@ class BaseResource(object):
     def __init__(self, *config_dicts, **kwargs):
         """
         @brief      Constructs the Resource object.
-        
+
         @param      self          The object
         @param      config_dicts  The configuration dicts
         @param      fetcher       The fetcher
         """
         self._prop_dict = collections.OrderedDict()
-        self._fetcher  = kwargs.get('fetcher', None)
+        self._fetcher = kwargs.get('fetcher', None)
         self._config = config_dicts
 
     def lookup(self, name):
@@ -121,13 +124,13 @@ class BaseResource(object):
         Performs a look up for a variable named `name` against
         the list of dictionaries passed as argument to the constructor
         of this class
-        
+
         @param      self  The object
         @param      name  The name of the variable to look-up
         """
         for config in self._config:
             if name in config:
-                return config[name] 
+                return config[name]
         raise AttributeError("%s not found" % name)
 
     def __getattr__(self, name):
@@ -156,15 +159,17 @@ class BaseResource(object):
         """
         return self._prop_dict
 
+
 class FeatureFlag(BaseResource):
+
     """
     @brief:     Describe a feature flag.
 
     https://docs.cloudfoundry.org/adminguide/listing-feature-flags.html
     """
-    properties = [  "name", 
-                            "value"
-                        ]
+    properties = ["name",
+                  "value"
+                  ]
 
     @property
     def value(self):
@@ -173,7 +178,9 @@ class FeatureFlag(BaseResource):
     def __init__(self, *config_dicts):
         super(FeatureFlag, self).__init__(*config_dicts)
 
+
 class Vars(BaseResource):
+
     """
     @brief:     Describe environment variables groups.
 
@@ -187,26 +194,27 @@ class Vars(BaseResource):
         super(Vars, self).__init__(*config_dicts)
         self.exclude_vars = kwargs.get('exclude_vars', ())
 
-
     def var_excluded(self, name):
         if name.lower().startswith(self.exclude_vars):
             return True
         return False
 
     def asdict(self):
-        #Differetly from other resources we do not need
-        #to extract the properties here. This resource consists
-        #on just a dictionary of key: value entries
+        # Differetly from other resources we do not need
+        # to extract the properties here. This resource consists
+        # on just a dictionary of key: value entries
         return self._config[0]
 
     def aslist(self):
         return [{'name': name, 'value': value} for name, value in self._config[0].items() if not self.var_excluded(name)]
 
     def load(self):
-        #Nothing to load. The response body is already in the correct format
+        # Nothing to load. The response body is already in the correct format
         pass
 
+
 class Quota(BaseResource):
+
     """
     @brief:     Describe a quota configuration
 
@@ -214,48 +222,49 @@ class Quota(BaseResource):
      """
 
     properties = [
-                            "guid",
-                            "name", 
-                            "total_services", 
-                            "total_routes", 
-                            "memory_limit", 
+        "guid",
+                            "name",
+                            "total_services",
+                            "total_routes",
+                            "memory_limit",
                             "non_basic_services_allowed",
-                            "instance_memory_limit", 
+                            "instance_memory_limit",
                             "total_service_keys",
-                            "total_reserved_route_ports", 
+                            "total_reserved_route_ports",
                             "total_private_domains",
                             "app_instance_limit"
-                        ]
+    ]
 
     def __init__(self, *config_dicts):
         super(Quota, self).__init__(*config_dicts)
 
+
 class Space(BaseResource):
+
     """
     @brief:     Describe a space configuration
 
     Docs: https://docs.cloudfoundry.org/concepts/roles.html#spaces
     """
     user_types = [
-                            "developers", 
-                            "managers", 
+        "developers",
+                            "managers",
                             "auditors"
-                        ]
+    ]
 
     properties = [
-                            "guid",
-                            "name", 
-                            "allow_ssh", 
-                            "developers", 
-                            "managers", 
-                            "auditors", 
+        "guid",
+                            "name",
+                            "allow_ssh",
+                            "developers",
+                            "managers",
+                            "auditors",
                             "security_groups"
-                        ]
-    
+    ]
+
     def __init__(self, *config_dicts,  **kwargs):
         super(Space, self).__init__(*config_dicts, **kwargs)
         self._security_groups = []
-
 
     @property
     def security_groups(self):
@@ -270,10 +279,11 @@ class Space(BaseResource):
         if groups is None:
             return
 
-        group_names = [group['name'] for group in groups if group['running_default'] is False]
-        #at this point the group_names contain all the running groups in addition
-        #to the groups assigned to this space.
-        #That's why we need to remove the duplicates
+        group_names = [group['name']
+                       for group in groups if group['running_default'] is False]
+        # at this point the group_names contain all the running groups in addition
+        # to the groups assigned to this space.
+        # That's why we need to remove the duplicates
         group_names = list(set(group_names))
 
         for name in group_names:
@@ -305,27 +315,28 @@ class Space(BaseResource):
 
 
 class Organization(BaseResource):
+
     """
     @brief      Describe a CF organization
     """
     user_types = [
-                            "users", 
-                            "managers", 
-                            "billing_managers", 
+        "users",
+                            "managers",
+                            "billing_managers",
                             "auditors"
-                        ]
+    ]
 
     properties = [
-                            "guid",
-                            "name", 
+        "guid",
+                            "name",
                             "quota",
                             "domains_private",
-                            "spaces", 
-                            "users", 
-                            "managers", 
-                            "billing_managers", 
+                            "spaces",
+                            "users",
+                            "managers",
+                            "billing_managers",
                             "auditors"
-                        ]
+    ]
 
     def __init__(self, *config_dicts, **kwargs):
         super(Organization, self).__init__(*config_dicts, **kwargs)
@@ -371,10 +382,11 @@ class Organization(BaseResource):
         url = self.lookup("spaces_url")
         spaces = self._fetcher.get_resources(url)
         for space in spaces:
-            new_space = Space(space['entity'], space['metadata'], fetcher=self._fetcher)
+            new_space = Space(
+                space['entity'], space['metadata'], fetcher=self._fetcher)
             new_space.load()
             self._spaces.append(new_space.asdict())
-    
+
     def load_users(self):
         """
         @brief      Loads all the users for this org.
@@ -384,7 +396,7 @@ class Organization(BaseResource):
             try:
                 self.lookup(url)
             except AttributeError:
-                continue 
+                continue
             users = self._fetcher.get_entities(self.lookup(url))
             user_list = []
             for user in users:
@@ -393,7 +405,6 @@ class Organization(BaseResource):
             if len(user_list) > 0:
                 setattr(self, user_type, user_list)
 
-
     def load(self):
         self.load_private_domains()
         self.load_quota_definitions()
@@ -401,18 +412,20 @@ class Organization(BaseResource):
         self.load_users()
         BaseResource.load(self)
 
+
 class SecurityGroup(BaseResource):
+
     """
     @brief      Describe a global security group
     """
 
     properties = [
-                            "guid",
-                            "name", 
+        "guid",
+                            "name",
                             "running_default",
-                            "staging_default", 
+                            "staging_default",
                             "rules"
-                        ]
+    ]
 
     def __init__(self, *config_dicts, **kwargs):
         super(SecurityGroup, self).__init__(*config_dicts, **kwargs)
@@ -420,7 +433,7 @@ class SecurityGroup(BaseResource):
 
     @property
     def rules(self):
-        return self._rules 
+        return self._rules
 
     def generate_rule_name(self):
         num = 0
@@ -438,25 +451,26 @@ class SecurityGroup(BaseResource):
         for index, rule in enumerate(rules):
             new_rule = SecurityRule(rule)
             new_rule.name_generator = name_generator
-            #if new_rule.has_name():
+            # if new_rule.has_name():
             new_rule.load()
             self._rules.append(new_rule.asdict())
 
+
 class SecurityRule(BaseResource):
+
     """
     @brief:     Describe a security rule.
     """
 
     properties = [
-                            "name", 
-                            "protocol", 
-                            "destination", 
-                            "ports", 
-                            "logs", 
-                            "code", 
+        "name",
+                            "protocol",
+                            "destination",
+                            "ports",
+                            "logs",
+                            "code",
                             "type"
-                        ]
-
+    ]
 
     def __init__(self, *config_dicts, **kwargs):
         super(SecurityRule, self).__init__(*config_dicts, **kwargs)
@@ -468,7 +482,7 @@ class SecurityRule(BaseResource):
         except AttributeError:
             return False
         return True
-    
+
     @property
     def name(self):
         return self.lookup("description")
@@ -483,30 +497,32 @@ class SecurityRule(BaseResource):
 
 
 class User(BaseResource):
+
     """
     @brief      Describe a CF user.
     """
 
     properties = [
-                            "guid",
+        "guid",
                             "name",
                             "password",
-                            "active", 
-                            "email", 
-                            "given_name", 
+                            "active",
+                            "email",
+                            "given_name",
                             "family_name",
-                            "default_organization", 
-                            "default_space", 
-                            "origin", 
+                            "default_organization",
+                            "default_space",
+                            "origin",
                             "external_id"
-                        ]
+    ]
 
     def __init__(self, *config_dicts, **kwargs):
         cf_response = kwargs.get('cf_response', None)
-        fetcher  = kwargs.get('fetcher', None)
+        fetcher = kwargs.get('fetcher', None)
 
         if cf_response is None:
-            raise ExporterException("Please provide the CF configuration for this user resource")
+            raise ExporterException(
+                "Please provide the CF configuration for this user resource")
         if fetcher is None:
             raise ExporterException("Please provide a valid resource fetcher")
 
@@ -517,7 +533,7 @@ class User(BaseResource):
     def lookup_cf_response(self, name):
         config = self._cf_response
         if name in config:
-                return config[name] 
+                return config[name]
         raise AttributeError("%s not found" % name)
 
     @property
@@ -545,7 +561,7 @@ class User(BaseResource):
     @property
     def password(self):
         return None
-    
+
     @property
     def email(self):
         emails = self.lookup('emails')
@@ -553,7 +569,7 @@ class User(BaseResource):
             if 'value' in emails[0]:
                 return emails[0]['value']
         raise AttributeError("email not found")
-    
+
     @property
     def name(self):
         return self.lookup('userName')
@@ -588,8 +604,6 @@ class User(BaseResource):
                 self._default_space = space['name']
 
 
-
-
 class Exporter:
 
     def __init__(self, client, exclude_vars=""):
@@ -598,12 +612,15 @@ class Exporter:
         self.fetcher = ResourceFetcher(client)
         self.manifest = collections.OrderedDict()
         exprs = re.split(';|,', exclude_vars)
-        self.exclude_vars = tuple(expr.strip().lower() for expr in exprs if len(expr) > 0)
+        self.exclude_vars = tuple(expr.strip().lower()
+                                  for expr in exprs if len(expr) > 0)
 
     def generate_manifest(self):
         self.manifest["cf_feature_flags"] = self.add_feature_flags()
-        self.manifest["cf_staging_environment_variables"] = self.add_staging_environment_variables()
-        self.manifest["cf_running_environment_variables"] = self.add_running_environment_variables()
+        self.manifest[
+            "cf_staging_environment_variables"] = self.add_staging_environment_variables()
+        self.manifest[
+            "cf_running_environment_variables"] = self.add_running_environment_variables()
         self.manifest["cf_shared_domains"] = self.add_shared_domains()
         self.manifest["cf_security_groups"] = self.add_security_groups()
         self.manifest["cf_quotas"] = self.add_quotas()
@@ -620,14 +637,16 @@ class Exporter:
         return flag_list
 
     def add_staging_environment_variables(self):
-        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/staging")
-        
+        response = self.fetcher.get_raw(
+            "/v2/config/environment_variable_groups/staging")
+
         v = Vars(response, exclude_vars=self.exclude_vars)
         return v.aslist()
 
     def add_running_environment_variables(self):
-        response = self.fetcher.get_raw("/v2/config/environment_variable_groups/running")
-        
+        response = self.fetcher.get_raw(
+            "/v2/config/environment_variable_groups/running")
+
         v = Vars(response, exclude_vars=self.exclude_vars)
         return v.aslist()
 
@@ -674,8 +693,8 @@ class Exporter:
         response = self.fetcher.get_resources("/v2/organizations")
         org_list = []
         for org in response:
-            o = Organization(org['entity'], org['metadata'], fetcher=self.fetcher)
+            o = Organization(
+                org['entity'], org['metadata'], fetcher=self.fetcher)
             o.load()
             org_list.append(o.asdict())
         return org_list
-
