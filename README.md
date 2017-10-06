@@ -3,12 +3,16 @@
 `cf-configuration-exporter` is a simple utility whose aim is to generate a 
 configuration manifest from a live installation of CloudFoundry.
 
-The utility is meant to be used in combination with 2 other projects:
+The utility is meant to be used either in combination with the CF configurator project:
 
 - https://github.com/SpringerPE/python-cfconfigurator
 - https://github.com/SpringerPE/ansible-cloudfoundry-role
 
-and helps you get started with an initial manifest without having to extract manually
+or with the following terraform provider:
+
+- https://github.com/mevansam/terraform-provider-cf
+
+and helps you get started with an initial manifest or terraform resources without having to extract manually
 all the information needed.
 
 The code is compatible with Python 3
