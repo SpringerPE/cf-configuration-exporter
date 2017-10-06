@@ -25,10 +25,8 @@ class ManifestMutation(object):
 			self.map_list_field(field, tf_dict, cf_dict, **options)
 
 	def map_field(self, tf_field, tf_dict, cf_dict,
-		cf_field=None,
-		optional=False,
-		mapping={},
-		default=None):
+		cf_field=None, optional=False,
+		mapping={}, default=None):
 
 		if not cf_field:
 			cf_field = tf_field
@@ -48,9 +46,7 @@ class ManifestMutation(object):
 				"Field {} is not optional".format(tf_field))
 
 	def map_list_field(self, tf_field, tf_dict, cf_dict,
-		cf_field=None,
-		key_fn=lambda x: x, 
-		fmt=None):
+		cf_field=None, key_fn=lambda x: x, fmt=None):
 
 		if not cf_field:
 			cf_field=tf_field
@@ -204,7 +200,6 @@ class TerraformMutation(ManifestMutation):
 		for cf_quota in cf_quotas:
 			tf_quota  = collections.OrderedDict()
 			self.map_fields(tf_quota, cf_quota, fields)
-			print(tf_quota)
 			tf_quotas.append(tf_quota)
 
 		return tf_quotas
