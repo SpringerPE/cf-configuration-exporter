@@ -235,7 +235,6 @@ class TerraformMutation(ManifestMutation):
 			}
 		}
 		for cf_space in spaces:
-			print(cf_space)
 			tf_space = collections.OrderedDict()
 			tf_space["org"] = org
 			tf_space["resource_name"] = '{}_{}'.format(org,
