@@ -47,7 +47,7 @@ class TestMutations(unittest.TestCase):
 		self.assertEqual(dest_dict["name"], "resource_name")
 
 		# Test renaming cf field
-		tm.map_field("mutated_name", dest_dict, source_dict, cf_field="name")
+		tm.map_field("mutated_name", dest_dict, source_dict, source_field="name")
 		self.assertIn("mutated_name", dest_dict)
 		self.assertEqual(dest_dict["mutated_name"], "resource_name")
 
@@ -61,13 +61,13 @@ class TestMutations(unittest.TestCase):
 
 		#Test default
 		tm.map_field("not_existent_w_default", dest_dict,
-			source_dict, cf_field="not_existent", optional=True, default="default")
+			source_dict, source_field="not_existent", optional=True, default="default")
 		self.assertIn("not_existent_w_default", dest_dict)
 		self.assertEqual(dest_dict["not_existent_w_default"], "default")
 
 		#Test mapping
 		tm.map_field("mapped_property", dest_dict, source_dict,
-			cf_field="property", mapping={"value": "mapped_value"})
+			source_field="property", mapping={"value": "mapped_value"})
 		self.assertIn("mapped_property", dest_dict)
 		self.assertEqual(dest_dict["mapped_property"], "mapped_value")
 

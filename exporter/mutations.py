@@ -16,48 +16,64 @@ class ManifestMutation(object):
 	def mutate_manifest(self):
 		return self.cf_dict
 
-	def map_fields(self, tf_dict, cf_dict, fields):
-		for field, options in fields.items():
-			self.map_field(field, tf_dict, cf_dict, **options)
+	def map_flags(self, flags, source_flags):
+		dest_flags = []
 
-	def map_list_fields(self, tf_dict, cf_dict, fields):
-		for field, options in fields.items():
-			self.map_list_field(field, tf_dict, cf_dict, **options)
+		for flag in source_flags:
+			flag_name = flag['name']
+			flag_value = flag['value']
 
-	def map_field(self, tf_field, tf_dict, cf_dict,
-		cf_field=None, optional=False,
+			if flags[flag_name] is not None:
+				flag_name = flags[flag_name]
+
+			flag_value = "enabled" if flag_value else "disabled"
+
+			dest_flags.append({'name': flag_name, 'value': flag_value})
+
+		return dest_flags
+
+	def map_fields(self, dest_dict, source_dict, fields):
+		for field, options in fields.items():
+			self.map_field(field, dest_dict, source_dict, **options)
+
+	def map_list_fields(self, dest_dict, source_dict, fields):
+		for field, options in fields.items():
+			self.map_list_field(field, dest_dict, source_dict, **options)
+
+	def map_field(self, dest_field, dest_dict, source_dict,
+		source_field=None, optional=False,
 		mapping={}, default=None):
 
-		if not cf_field:
-			cf_field = tf_field
+		if not source_field:
+			source_field = dest_field
 		# the field is present and needs to be mapped
-		if cf_field in cf_dict and cf_dict[cf_field] in mapping:
-			tf_dict[tf_field] = mapping[cf_dict[cf_field]]
+		if source_field in source_dict and source_dict[source_field] in mapping:
+			dest_dict[dest_field] = mapping[source_dict[source_field]]
 		# the field is present and doesn't need to be mapped
-		elif cf_field in cf_dict:
-			if cf_dict[cf_field] != None:
-				tf_dict[tf_field] = cf_dict[cf_field]
+		elif source_field in source_dict:
+			if source_dict[source_field] != None:
+				dest_dict[dest_field] = source_dict[source_field]
 		# the field is not present but it was given a default
 		elif default:
-			tf_dict[tf_field] = default
+			dest_dict[dest_field] = default
 		# the field is not present and is not optional
 		elif not optional:
 			raise FieldNotOptionalException(
-				"Field {} is not optional".format(tf_field))
+				"Field {} is not optional".format(dest_field))
 
-	def map_list_field(self, tf_field, tf_dict, cf_dict,
-		cf_field=None, key_fn=lambda x: x, fmt=None):
+	def map_list_field(self, dest_field, dest_dict, source_dict,
+		source_field=None, key_fn=lambda x: x, fmt=None):
 
-		if not cf_field:
-			cf_field=tf_field
+		if not source_field:
+			source_field=dest_field
 
-		tf_dict[tf_field] = []
-		if not cf_field in cf_dict:
+		dest_dict[dest_field] = []
+		if not source_field in source_dict:
 			return
 
-		for elem in cf_dict[cf_field]:
+		for elem in source_dict[source_field]:
 			elem = fmt.format(key_fn(elem)) if fmt else key_fn(elem)
-			tf_dict[tf_field].append(elem)
+			dest_dict[dest_field].append(elem)
 
 class TerraformMutation(ManifestMutation):
 
@@ -91,9 +107,8 @@ class TerraformMutation(ManifestMutation):
 
 	def mutate_feature_flags(self, cf_dict):
 		cf_flags = cf_dict["cf_feature_flags"]
-		tf_flags = []
 
-		supported_flags = {
+		flags = {
 			"user_org_creation": None,
 			"private_domain_creation": None,
 			"app_bits_upload": None,
@@ -106,19 +121,9 @@ class TerraformMutation(ManifestMutation):
 			"task_creation": None
 		}
 
-		flags_to_port = [flag for flag in cf_flags if flag['name'] in supported_flags]
-
-		for flag in flags_to_port:
-			if supported_flags[flag['name']]:
-				flag_name= supported_flags[flag['name']]
-			else:
-				flag_name = flag['name']
-
-			flag_value = "enabled" if flag['value'] else "disabled"
-
-			tf_flags.append({'name': flag_name, 'value': flag_value})
+		supported_flags = [flag for flag in cf_flags if flag['name'] in flags]
 		
-		return tf_flags
+		return self.map_flags(flags, supported_flags)
 
 	def mutate_security_groups(self, cf_dict):
 		cf_asgs = cf_dict["cf_security_groups"]
@@ -170,24 +175,24 @@ class TerraformMutation(ManifestMutation):
 			"guid": {},
 			"name": {},
 			"allow_paid_service_plans": {
-				"cf_field": "non_basic_services_allowed",
+				"source_field": "non_basic_services_allowed",
 				"mapping": {True: "true", False: "false"}
 			},
-			"total_memory": {"cf_field": "memory_limit"},
+			"total_memory": {"source_field": "memory_limit"},
 			"total_routes": {},
 			"total_services": {},
 			"instance_memory": {
-				"cf_field":"instance_memory_limit",
+				"source_field":"instance_memory_limit",
 				"optional": True,
 				"default": -1
 			},
 			"total_app_instances": {
-				"cf_field": "app_instance_limit",
+				"source_field": "app_instance_limit",
 				"optional": True,
 				"default": -1
 			},
 			"total_route_ports":{
-				"cf_field": "total_reserved_route_ports",
+				"source_field": "total_reserved_route_ports",
 				"optional": True,
 				"default": -1
 			},
@@ -220,7 +225,7 @@ class TerraformMutation(ManifestMutation):
 		}
 
 		list_fields = {
-			"asgs": {"cf_field": "security_groups"},
+			"asgs": {"source_field": "security_groups"},
 			"managers": {
 				"key_fn": lambda x: self.to_terraform_resource_name(x["name"]),
 				"fmt": self.user_fmt
@@ -342,7 +347,7 @@ class CFConfiguratorMutation(ManifestMutation):
 		cf_flags = cf_dict["cf_feature_flags"]
 		cc_flags = []
 
-		supported_flags = {
+		flags = {
 			"user_org_creation": None,
 			"private_domain_creation": None,
 			"app_bits_upload": None,
@@ -355,17 +360,9 @@ class CFConfiguratorMutation(ManifestMutation):
 			"task_creation": None
 		}
 
-		flags_to_port = [flag for flag in cf_flags if flag['name'] in supported_flags]
+		supported_flags = [flag for flag in cf_flags if flag['name'] in flags]
 
-		for flag in flags_to_port:
-			if supported_flags[flag['name']]:
-				flag_name= supported_flags[flag['name']]
-			else:
-				flag_name = flag['name']
-
-			cc_flags.append({'name': flag_name, 'value': flag['value']})
-		
-		return cc_flags
+		return self.map_flags(flags, supported_flags)
 
 	def mutate_security_groups(self, cf_dict):
 		cf_asgs = cf_dict["cf_security_groups"]
